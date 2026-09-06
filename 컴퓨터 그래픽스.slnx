@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="컴퓨터 그래픽스/컴퓨터 그래픽스.vcxproj" Id="ddbf2638-1804-4b58-aac1-5f020f0b6cda" />
+</Solution>
