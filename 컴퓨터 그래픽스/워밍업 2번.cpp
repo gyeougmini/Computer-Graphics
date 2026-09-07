@@ -35,7 +35,6 @@ int loadFile(const char* filename) {
 
     line_count = 0;
     while (line_count < MAX_LINES && fgets(original_lines[line_count], MAX_LEN, fp)) {
-        // 줄바꿈 문자 제거
         original_lines[line_count][strcspn(original_lines[line_count], "\r\n")] = '\0';
         line_count++;
     }
@@ -43,12 +42,12 @@ int loadFile(const char* filename) {
     return 1;
 }
 
-// 각 줄의 단어 개수 계산
+// 단어 개수 계산
 int countWords(const char* str) {
     int count = 0;
     int in_word = 0;
     for (int i = 0; str[i] != '\0'; i++) {
-        if (!isspace((unsigned char)str[i])) {
+        if (!isspace((unsigned char)str[i]) && str[i] != '*') {
             if (!in_word) {
                 count++;
                 in_word = 1;
@@ -61,137 +60,144 @@ int countWords(const char* str) {
     return count;
 }
 
-// 기본 및 토글 기반 문장 출력 함수
-void printLines() {
-    // b, c, i 기능은 전용 함수에서 출력 처리
-    if (toggle_c) {
-        int cap_word_count = 0;
-        for (int i = 0; i < line_count; i++) {
-            char* line = original_lines[i];
-            int len = (int)strlen(line);
-            int idx = 0;
+// 단일 줄에 대해 텍스트 조작 토글(a, g, d, f, e)을 순서대로 적용
+void transformLine(const char* src, char* dst) {
+    strcpy(dst, src);
+    int len = (int)strlen(dst);
 
-            while (idx < len) {
-                if (isspace((unsigned char)line[idx])) {
-                    putchar(line[idx++]);
-                    continue;
-                }
-                int start = idx;
-                while (idx < len && !isspace((unsigned char)line[idx])) idx++;
-
-                if (isupper((unsigned char)line[start])) {
-                    setColor(11); // 강조 색상
-                    for (int k = start; k < idx; k++) putchar(line[k]);
-                    setColor(7);  // 원복
-                    cap_word_count++;
-                }
-                else {
-                    for (int k = start; k < idx; k++) putchar(line[k]);
-                }
-            }
-            putchar('\n');
+    // a: 대소문자 반전
+    if (toggle_a) {
+        for (int j = 0; j < len; j++) {
+            if (islower((unsigned char)dst[j])) dst[j] = (char)toupper((unsigned char)dst[j]);
+            else if (isupper((unsigned char)dst[j])) dst[j] = (char)tolower((unsigned char)dst[j]);
         }
-        printf("[Count of words starting with uppercase: %d]\n", cap_word_count);
-        return;
     }
 
-    if (toggle_h) {
-        for (int i = 0; i < line_count; i++) {
-            for (int j = 0; original_lines[i][j] != '\0'; j++) {
-                putchar(original_lines[i][j]);
-                if (isdigit((unsigned char)original_lines[i][j])) {
+    // g: 특정 문자 치환
+    if (toggle_g) {
+        for (int j = 0; j < len; j++) {
+            if (dst[j] == g_old_char) dst[j] = g_new_char;
+        }
+    }
+
+    // d: 문장 전체 거꾸로
+    if (toggle_d) {
+        for (int j = 0; j < len / 2; j++) {
+            char t = dst[j];
+            dst[j] = dst[len - 1 - j];
+            dst[len - 1 - j] = t;
+        }
+    }
+
+    // f: 각 단어 거꾸로
+    if (toggle_f) {
+        int start = 0;
+        while (start < len) {
+            while (start < len && (dst[start] == ' ' || dst[start] == '*')) start++;
+            int end = start;
+            while (end < len && dst[end] != ' ' && dst[end] != '*') end++;
+            for (int l = start, r = end - 1; l < r; l++, r--) {
+                char t = dst[l];
+                dst[l] = dst[r];
+                dst[r] = t;
+            }
+            start = end;
+        }
+    }
+
+    // e: 공백에 '*' 삽입
+    if (toggle_e) {
+        for (int j = 0; j < len; j++) {
+            if (dst[j] == ' ') dst[j] = '*';
+        }
+    }
+}
+
+// 기본 및 누적 토글 기반 출력 함수
+void printLines() {
+    int cap_word_count = 0;
+
+    for (int i = 0; i < line_count; i++) {
+        char transformed[MAX_LEN];
+        // 1. 텍스트 자체를 변경하는 토글들 먼저 누적 적용
+        transformLine(original_lines[i], transformed);
+        int len = (int)strlen(transformed);
+
+        // 2. toggle_c(대문자 시작 단어 강조) 및 toggle_h(숫자 뒤 줄바꿈)를 반영하여 출력
+        int idx = 0;
+        while (idx < len) {
+            // 공백 또는 '*' 구분자 처리
+            if (isspace((unsigned char)transformed[idx]) || transformed[idx] == '*') {
+                char ch = transformed[idx++];
+                putchar(ch);
+                if (toggle_h && isdigit((unsigned char)ch)) putchar('\n');
+                continue;
+            }
+
+            // 단어 추출
+            int start = idx;
+            while (idx < len && !isspace((unsigned char)transformed[idx]) && transformed[idx] != '*') {
+                idx++;
+            }
+
+            // toggle_c 활성화 상태이고 단어 첫 글자가 대문자인 경우 강조
+            int is_capital = toggle_c && isupper((unsigned char)transformed[start]);
+            if (is_capital) {
+                setColor(11); // 강조 색상
+                cap_word_count++;
+            }
+
+            for (int k = start; k < idx; k++) {
+                putchar(transformed[k]);
+                if (toggle_h && isdigit((unsigned char)transformed[k])) {
                     putchar('\n');
                 }
             }
-            putchar('\n');
+
+            if (is_capital) {
+                setColor(7); // 색상 원복
+            }
         }
-        return;
+        putchar('\n');
     }
 
-    for (int i = 0; i < line_count; i++) {
-        char temp[MAX_LEN];
-        strcpy(temp, original_lines[i]);
-        int len = (int)strlen(temp);
-
-        // a: 대소문자 반전
-        if (toggle_a) {
-            for (int j = 0; j < len; j++) {
-                if (islower((unsigned char)temp[j])) temp[j] = (char)toupper((unsigned char)temp[j]);
-                else if (isupper((unsigned char)temp[j])) temp[j] = (char)tolower((unsigned char)temp[j]);
-            }
-        }
-
-        // g: 특정 문자 치환
-        if (toggle_g) {
-            for (int j = 0; j < len; j++) {
-                if (temp[j] == g_old_char) temp[j] = g_new_char;
-            }
-        }
-
-        // d: 문장 전체 거꾸로 출력
-        if (toggle_d) {
-            for (int j = 0; j < len / 2; j++) {
-                char t = temp[j];
-                temp[j] = temp[len - 1 - j];
-                temp[len - 1 - j] = t;
-            }
-        }
-
-        // f: 각 단어 거꾸로 출력
-        if (toggle_f) {
-            int start = 0;
-            while (start < len) {
-                while (start < len && (temp[start] == ' ' || temp[start] == '*')) start++;
-                int end = start;
-                while (end < len && temp[end] != ' ' && temp[end] != '*') end++;
-                for (int l = start, r = end - 1; l < r; l++, r--) {
-                    char t = temp[l];
-                    temp[l] = temp[r];
-                    temp[r] = t;
-                }
-                start = end;
-            }
-        }
-
-        // e: 공백에 '*' 삽입
-        if (toggle_e) {
-            for (int j = 0; j < len; j++) {
-                if (temp[j] == ' ') temp[j] = '*';
-            }
-        }
-
-        printf("%s\n", temp);
+    if (toggle_c) {
+        printf("[Count of words starting with uppercase: %d]\n", cap_word_count);
     }
 }
 
-// b: 각 줄의 문장 뒤에 단어 개수 출력
+// b: 현재 누적 변환된 문장 기준으로 단어 개수 출력
 void executeB() {
     for (int i = 0; i < line_count; i++) {
-        printf("%s (Word count: %d)\n", original_lines[i], countWords(original_lines[i]));
+        char transformed[MAX_LEN];
+        transformLine(original_lines[i], transformed);
+        printf("%s (Word count: %d)\n", transformed, countWords(transformed));
     }
 }
 
-// i: 단어 검색 및 대소문자 무시 색상 강조 + 개수 카운트
+// i: 단어 검색 (누적 변환된 문자열 기준 검색)
 void executeI(const char* target) {
     int target_len = (int)strlen(target);
     if (target_len == 0) return;
 
     int total_match = 0;
     for (int i = 0; i < line_count; i++) {
-        char* line = original_lines[i];
-        int len = (int)strlen(line);
+        char transformed[MAX_LEN];
+        transformLine(original_lines[i], transformed);
+
+        int len = (int)strlen(transformed);
         int j = 0;
 
         while (j < len) {
-            if (_strnicmp(&line[j], target, target_len) == 0) {
+            if (_strnicmp(&transformed[j], target, target_len) == 0) {
                 setColor(11);
-                for (int k = 0; k < target_len; k++) putchar(line[j + k]);
+                for (int k = 0; k < target_len; k++) putchar(transformed[j + k]);
                 setColor(7);
                 total_match++;
                 j += target_len;
             }
             else {
-                putchar(line[j]);
+                putchar(transformed[j]);
                 j++;
             }
         }
@@ -200,7 +206,7 @@ void executeI(const char* target) {
     printf("[Matched count: %d]\n", total_match);
 }
 
-// j: 문장 순서 회전 (1번 -> 2번, ..., 9번 -> 1번)
+// j: 문장 순서 회전
 void executeJ() {
     if (line_count <= 1) return;
     char last[MAX_LEN];
@@ -222,7 +228,6 @@ int main() {
         return 1;
     }
 
-    // 파일 로드 후 원본 출력
     printf("\n--- File Content ---\n");
     printLines();
     printf("--------------------\n");

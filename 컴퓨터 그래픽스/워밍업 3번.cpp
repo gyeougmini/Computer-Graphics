@@ -3,8 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 
 #define MAX_POINTS 10
+
+// ANSI 이스케이프 코드 (색상 변경용)
+#define COLOR_RED   "\x1b[31m"
+#define COLOR_RESET "\x1b[0m"
 
 // 3차원 점 구조체 정의
 typedef struct {
@@ -14,6 +19,10 @@ typedef struct {
 
 Point list[MAX_POINTS];
 int toggle_f = 0; // f 명령어 토글 플래그
+
+// 각 기능별 독립 토글 플래그 (1: 활성, 0: 비활성)
+int toggle_case = 0;   // a: 대소문자 반전 토글
+int toggle_color = 0;  // c: 대문자 강조 색상 토글
 
 // 리스트 상태 출력 함수 (9번이 맨 위, 0번이 맨 아래)
 void printList() {
