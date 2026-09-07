@@ -23,7 +23,7 @@ int toggle_h = 0;
 char g_old_char = '\0';
 char g_new_char = '\0';
 
-// 콘솔 색상 지정 함수 (기본 7: White, 강조 11: Cyan)
+// 콘솔 색상 지정 함수
 void setColor(unsigned short color) {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 }
@@ -43,7 +43,7 @@ int loadFile(const char* filename) {
     return 1;
 }
 
-// 각 줄의 단어 개수 계산 (연속 공백을 1개로 취급)
+// 각 줄의 단어 개수 계산
 int countWords(const char* str) {
     int count = 0;
     int in_word = 0;
@@ -137,7 +137,7 @@ void printLines() {
             }
         }
 
-        // f: 각 단어 거꾸로 출력 (e가 적용되어 공백이 '*'일 수 있음도 고려)
+        // f: 각 단어 거꾸로 출력
         if (toggle_f) {
             int start = 0;
             while (start < len) {

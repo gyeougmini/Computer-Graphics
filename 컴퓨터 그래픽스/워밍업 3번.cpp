@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS
+﻿#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -68,9 +68,15 @@ void printList() {
 // + xyz: 맨 위에 삽입 (0번부터 탐색하여 빈 첫 칸에 삽입, 9번까지 차있으면 빈 0번에 삽입)
 void insertTop(int x, int y, int z) {
     int target_idx = -1;
-    for (int i = 0; i < MAX_POINTS; i++) {
-        if (!list[i].is_valid) {
-            target_idx = i;
+    for (int i = 9; i >= 0; i--) {
+        if (list[i].is_valid || i == 0) {
+            if (i == 0) {
+                if (!list[0].is_valid) {
+                    target_idx = 0;
+                    break;
+                }
+            }
+            target_idx = i + 1;
             break;
         }
     }
@@ -118,11 +124,11 @@ void insertBottom(int x, int y, int z) {
 
 // d: 맨 아래(0번) 데이터 삭제
 void deleteBottom() {
-    if (list[0].is_valid) {
-        list[0].is_valid = 0;
-    }
-    else {
-        printf("맨 아래(0번)에 삭제할 데이터가 없습니다.\n");
+    for (int i = 0; i < 10; ++i) {
+        if (list[i].is_valid) {
+            list[i].is_valid = 0;
+            break;
+        }
     }
 }
 

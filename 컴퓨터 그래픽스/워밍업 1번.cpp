@@ -53,38 +53,54 @@ int main() {
 
 		switch (c) {
 		case 'a':
-			for (int i = 0; i < rowcol; ++i) {
-				for (int j = 0; j < rowcol; ++j) {
-					printf("%d ", matrix1[i][j] + matrix2[i][j]);
+
+			if (min == true || max == true) {
+				printf("e 또는 f가 켜져있습니다. 해제한 후 실행해주십시오.\n");
+			}
+			else {
+				for (int i = 0; i < rowcol; ++i) {
+					for (int j = 0; j < rowcol; ++j) {
+						printf("%d ", matrix1[i][j] + matrix2[i][j]);
+					}
+					printf("\n");
 				}
 				printf("\n");
 			}
-			printf("\n");
 
 			break;
 
 		case 'd':
-			for (int i = 0; i < rowcol; ++i) {
-				for (int j = 0; j < rowcol; ++j) {
-					printf("%d ", matrix1[i][j] - matrix2[i][j]);
+			if (min == true || max == true) {
+				printf("e 또는 f가 켜져있습니다. 해제한 후 실행해주십시오.\n");
+			}
+			else {
+				for (int i = 0; i < rowcol; ++i) {
+					for (int j = 0; j < rowcol; ++j) {
+						printf("%d ", matrix1[i][j] - matrix2[i][j]);
+					}
+					printf("\n");
 				}
 				printf("\n");
 			}
-			printf("\n");
 			break;
 
 		case 'm':
-			for (int i = 0; i < rowcol; ++i) {
-				for (int j = 0; j < rowcol; ++j) {
-					for (int k = 0; k < rowcol; ++k) {
-						sum += matrix1[i][k] * matrix2[k][j];
+			if (min == true || max == true) {
+				printf("e 또는 f가 켜져있습니다. 해제한 후 실행해주십시오.\n");
+			}
+			else {
+				for (int i = 0; i < rowcol; ++i) {
+					for (int j = 0; j < rowcol; ++j) {
+						for (int k = 0; k < rowcol; ++k) {
+							sum += matrix1[i][k] * matrix2[k][j];
+						}
+						printf("%d ", sum);
+						sum = 0;
 					}
-					printf("%d ", sum);
-					sum = 0;
+					printf("\n");
 				}
 				printf("\n");
 			}
-			printf("\n");
 			break;
 
 		case 'r':
@@ -97,110 +113,189 @@ int main() {
 			break;
 
 		case 't':
-			for (int i = 0; i < rowcol; ++i) {
-				for (int j = 0; j < rowcol; ++j) {
-					printf("%d ", matrix1[j][i]);
-					matrix3[i][j] = matrix1[j][i];
+			if (min == true || max == true) {
+				printf("e 또는 f가 켜져있습니다. 해제한 후 실행해주십시오.\n");
+			}
+			else{
+				for (int i = 0; i < rowcol; ++i) {
+					for (int j = 0; j < rowcol; ++j) {
+						printf("%d ", matrix1[j][i]);
+						matrix3[i][j] = matrix1[j][i];
+					}
+					printf("\n");
+				}
+
+				printf("\n");
+
+				for (int i = 0; i < rowcol; ++i) {
+					for (int j = 0; j < rowcol; ++j) {
+						printf("%d ", matrix2[j][i]);
+						matrix4[i][j] = matrix2[j][i];
+					}
+					printf("\n");
 				}
 				printf("\n");
-			}
 
-			printf("\n");
-
-			for (int i = 0; i < rowcol; ++i) {
-				for (int j = 0; j < rowcol; ++j) {
-					printf("%d ", matrix2[j][i]);
-					matrix4[i][j] = matrix2[j][i];
-				}
-				printf("\n");
-			}
-			printf("\n");
-
-			for (int i = 0; i < rowcol; ++i) {
-				for (int j = 0; j < rowcol; ++j) {
-					matrix1[i][j] = matrix3[i][j];
-					matrix2[i][j] = matrix4[i][j];
+				for (int i = 0; i < rowcol; ++i) {
+					for (int j = 0; j < rowcol; ++j) {
+						matrix1[i][j] = matrix3[i][j];
+						matrix2[i][j] = matrix4[i][j];
+					}
 				}
 			}
 
 			break;
 
 		case 'e':
-			if (min == false) {
-				for (int i = 0; i < rowcol; ++i) {
-					minimum[i] = 10;
-					for (int j = 0; j < rowcol; ++j) {
-						if (minimum[i] > matrix1[i][j]) {
-							minimum[i] = matrix1[i][j];
-						}
-					}
-				}
-				for (int i = 0; i < rowcol; ++i) {
-					for (int j = 0; j < rowcol; ++j) {
-						matrix3[i][j] = matrix1[i][j] - minimum[i];
-						printf("%d ", matrix3[i][j]);
-					}
-					printf("\n");
-				}
-
-				printf("\n");
-
-				for (int i = 0; i < rowcol; ++i) {
-					minimum[i] = 10;
-					for (int j = 0; j < rowcol; ++j) {
-						if (minimum[i] > matrix2[i][j]) {
-							minimum[i] = matrix2[i][j];
-						}
-					}
-				}
-				for (int i = 0; i < rowcol; ++i) {
-					for (int j = 0; j < rowcol; ++j) {
-						matrix4[i][j] = matrix2[i][j] - minimum[i];
-						printf("%d ", matrix4[i][j]);
-					}
-					printf("\n");
-				}
-				printf("\n");
-				min = true;
+			if (max == true) {
+				printf("f가 켜져있습니다. 해제한 후 실행해주십시오.\n");
 			}
 			else {
-				for (int i = 0; i < rowcol; ++i) {
-					for (int j = 0; j < rowcol; ++j) {
-						printf("%d ", matrix1[i][j]);
+				if (min == false) {
+					for (int i = 0; i < rowcol; ++i) {
+						minimum[i] = 10;
+						for (int j = 0; j < rowcol; ++j) {
+							if (minimum[i] > matrix1[i][j]) {
+								minimum[i] = matrix1[i][j];
+							}
+						}
+					}
+					for (int i = 0; i < rowcol; ++i) {
+						for (int j = 0; j < rowcol; ++j) {
+							matrix3[i][j] = matrix1[i][j] - minimum[i];
+							printf("%d ", matrix3[i][j]);
+						}
+						printf("\n");
+					}
+
+					printf("\n");
+
+					for (int i = 0; i < rowcol; ++i) {
+						minimum[i] = 10;
+						for (int j = 0; j < rowcol; ++j) {
+							if (minimum[i] > matrix2[i][j]) {
+								minimum[i] = matrix2[i][j];
+							}
+						}
+					}
+					for (int i = 0; i < rowcol; ++i) {
+						for (int j = 0; j < rowcol; ++j) {
+							matrix4[i][j] = matrix2[i][j] - minimum[i];
+							printf("%d ", matrix4[i][j]);
+						}
+						printf("\n");
 					}
 					printf("\n");
+					min = true;
 				}
-
-				printf("\n");
-
-				for (int i = 0; i < rowcol; ++i) {
-					for (int j = 0; j < rowcol; ++j) {
-						printf("%d ", matrix2[i][j]);
+				else {
+					for (int i = 0; i < rowcol; ++i) {
+						for (int j = 0; j < rowcol; ++j) {
+							printf("%d ", matrix1[i][j]);
+						}
+						printf("\n");
 					}
+
 					printf("\n");
+
+					for (int i = 0; i < rowcol; ++i) {
+						for (int j = 0; j < rowcol; ++j) {
+							printf("%d ", matrix2[i][j]);
+						}
+						printf("\n");
+					}
+					min = false;
 				}
-				min = false;
 			}
 			break;
 
 		case 'f':
-			if (max == false) {
-				for (int j = 0; j < rowcol; ++j) {
-					maximum[j] = -1;
-					for (int i = 0; i < rowcol; ++i) {
-						if (maximum[j] < matrix1[i][j]) {
-							maximum[j] = matrix1[i][j];
+			if (min == true) {
+			printf("e가 켜져있습니다. 해제한 후 실행해주십시오.\n");
+			}
+			else {
+				if (max == false) {
+					for (int j = 0; j < rowcol; ++j) {
+						maximum[j] = -1;
+						for (int i = 0; i < rowcol; ++i) {
+							if (maximum[j] < matrix1[i][j]) {
+								maximum[j] = matrix1[i][j];
+							}
 						}
 					}
-				}
-				for (int j = 0; j < rowcol; ++j) {
-					for (int i = 0; i < rowcol; ++i) {
-						matrix3[i][j] = matrix1[i][j] + maximum[j];
+					for (int j = 0; j < rowcol; ++j) {
+						for (int i = 0; i < rowcol; ++i) {
+							matrix3[i][j] = matrix1[i][j] + maximum[j];
+						}
 					}
-				}
 
+					for (int i = 0; i < rowcol; ++i) {
+						for (int j = 0; j < rowcol; ++j) {
+							printf("%d ", matrix3[i][j]);
+						}
+						printf("\n");
+					}
+
+					printf("\n");
+
+					for (int j = 0; j < rowcol; ++j) {
+						maximum[j] = -1;
+						for (int i = 0; i < rowcol; ++i) {
+							if (maximum[j] < matrix2[i][j]) {
+								maximum[j] = matrix2[i][j];
+							}
+						}
+					}
+					for (int j = 0; j < rowcol; ++j) {
+						for (int i = 0; i < rowcol; ++i) {
+							matrix4[i][j] = matrix2[i][j] + maximum[j];
+						}
+					}
+
+					for (int i = 0; i < rowcol; ++i) {
+						for (int j = 0; j < rowcol; ++j) {
+							printf("%d ", matrix4[i][j]);
+						}
+						printf("\n");
+					}
+
+					max = true;
+				}
+				else {
+					for (int i = 0; i < rowcol; ++i) {
+						for (int j = 0; j < rowcol; ++j) {
+							printf("%d ", matrix1[i][j]);
+						}
+						printf("\n");
+					}
+
+					printf("\n");
+
+					for (int i = 0; i < rowcol; ++i) {
+						for (int j = 0; j < rowcol; ++j) {
+							printf("%d ", matrix2[i][j]);
+						}
+						printf("\n");
+					}
+					max = false;
+				}
+			}
+			break;
+
+		case '+':
+			if (min == true || max == true) {
+				printf("e 또는 f가 켜져있습니다. 해제한 후 실행해주십시오.\n");
+			}
+			else {
 				for (int i = 0; i < rowcol; ++i) {
 					for (int j = 0; j < rowcol; ++j) {
+
+						matrix3[i][j] = matrix1[i][j] + 1;
+
+						if (matrix3[i][j] >= 10) {
+							matrix3[i][j] = 0;
+						}
+
 						printf("%d ", matrix3[i][j]);
 					}
 					printf("\n");
@@ -208,151 +303,102 @@ int main() {
 
 				printf("\n");
 
-				for (int j = 0; j < rowcol; ++j) {
-					maximum[j] = -1;
-					for (int i = 0; i < rowcol; ++i) {
-						if (maximum[j] < matrix2[i][j]) {
-							maximum[j] = matrix2[i][j];
-						}
-					}
-				}
-				for (int j = 0; j < rowcol; ++j) {
-					for (int i = 0; i < rowcol; ++i) {
-						matrix4[i][j] = matrix2[i][j] + maximum[j];
-					}
-				}
-
 				for (int i = 0; i < rowcol; ++i) {
 					for (int j = 0; j < rowcol; ++j) {
+
+						matrix4[i][j] = matrix2[i][j] + 1;
+
+						if (matrix4[i][j] >= 10) {
+							matrix4[i][j] = 0;
+						}
+
 						printf("%d ", matrix4[i][j]);
 					}
 					printf("\n");
 				}
-
-				max = true;
-			}
-			else {
-				for (int i = 0; i < rowcol; ++i) {
-					for (int j = 0; j < rowcol; ++j) {
-						printf("%d ", matrix1[i][j]);
-					}
-					printf("\n");
-				}
-
 				printf("\n");
 
 				for (int i = 0; i < rowcol; ++i) {
 					for (int j = 0; j < rowcol; ++j) {
-						printf("%d ", matrix2[i][j]);
+						matrix1[i][j] = matrix3[i][j];
+						matrix2[i][j] = matrix4[i][j];
 					}
-					printf("\n");
-				}
-				max = false;
-			}
-			break;
-
-		case '+':
-			for (int i = 0; i < rowcol; ++i) {
-				for (int j = 0; j < rowcol; ++j) {
-
-					matrix3[i][j] = matrix1[i][j] + 1;
-
-					if (matrix3[i][j] >= 10) {
-						matrix3[i][j] = 0;
-					}
-
-					printf("%d ", matrix3[i][j]);
-				}
-				printf("\n");
-			}
-
-			printf("\n");
-
-			for (int i = 0; i < rowcol; ++i) {
-				for (int j = 0; j < rowcol; ++j) {
-
-					matrix4[i][j] = matrix2[i][j] + 1;
-
-					if (matrix4[i][j] >= 10) {
-						matrix4[i][j] = 0;
-					}
-
-					printf("%d ", matrix4[i][j]);
-				}
-				printf("\n");
-			}
-			printf("\n");
-
-			for (int i = 0; i < rowcol; ++i) {
-				for (int j = 0; j < rowcol; ++j) {
-					matrix1[i][j] = matrix3[i][j];
-					matrix2[i][j] = matrix4[i][j];
 				}
 			}
 			break;
 
 		case '-':
-			for (int i = 0; i < rowcol; ++i) {
-				for (int j = 0; j < rowcol; ++j) {
+			if (min == true || max == true) {
+				printf("e 또는 f가 켜져있습니다. 해제한 후 실행해주십시오.\n");
+			}
+			else {
+				for (int i = 0; i < rowcol; ++i) {
+					for (int j = 0; j < rowcol; ++j) {
 
-					matrix3[i][j] = matrix1[i][j] - 1;
+						matrix3[i][j] = matrix1[i][j] - 1;
 
-					if (matrix3[i][j] < 0) {
-						matrix3[i][j] = 9;
+						if (matrix3[i][j] < 0) {
+							matrix3[i][j] = 9;
+						}
+
+						printf("%d ", matrix3[i][j]);
 					}
+					printf("\n");
+				}
 
-					printf("%d ", matrix3[i][j]);
+				printf("\n");
+
+				for (int i = 0; i < rowcol; ++i) {
+					for (int j = 0; j < rowcol; ++j) {
+
+						matrix4[i][j] = matrix2[i][j] - 1;
+
+						if (matrix4[i][j] < 0) {
+							matrix4[i][j] = 9;
+						}
+
+						printf("%d ", matrix4[i][j]);
+					}
+					printf("\n");
 				}
 				printf("\n");
-			}
 
-			printf("\n");
-
-			for (int i = 0; i < rowcol; ++i) {
-				for (int j = 0; j < rowcol; ++j) {
-
-					matrix4[i][j] = matrix2[i][j] - 1;
-
-					if (matrix4[i][j] < 0) {
-						matrix4[i][j] = 9;
+				for (int i = 0; i < rowcol; ++i) {
+					for (int j = 0; j < rowcol; ++j) {
+						matrix1[i][j] = matrix3[i][j];
+						matrix2[i][j] = matrix4[i][j];
 					}
-
-					printf("%d ", matrix4[i][j]);
-				}
-				printf("\n");
-			}
-			printf("\n");
-
-			for (int i = 0; i < rowcol; ++i) {
-				for (int j = 0; j < rowcol; ++j) {
-					matrix1[i][j] = matrix3[i][j];
-					matrix2[i][j] = matrix4[i][j];
 				}
 			}
 			break;
 
 		case 's':
-			for (int i = 0; i <= rowcol; ++i) {
-				for (int j = 0; j <= rowcol; ++j) {
-					matrix1[i][j] = rand() % 10;
-					matrix2[i][j] = rand() % 10;
-				}
+			if (min == true || max == true) {
+				printf("e 또는 f가 켜져있습니다. 해제한 후 실행해주십시오.\n");
 			}
-
-			for (int i = 0; i < rowcol; ++i) {
-				for (int j = 0; j < rowcol; ++j) {
-					printf("%d ", matrix1[i][j]);
+			else {
+				for (int i = 0; i <= rowcol; ++i) {
+					for (int j = 0; j <= rowcol; ++j) {
+						matrix1[i][j] = rand() % 10;
+						matrix2[i][j] = rand() % 10;
+					}
 				}
-				printf("\n");
-			}
 
-			printf("\n");
-
-			for (int i = 0; i < rowcol; ++i) {
-				for (int j = 0; j < rowcol; ++j) {
-					printf("%d ", matrix2[i][j]);
+				for (int i = 0; i < rowcol; ++i) {
+					for (int j = 0; j < rowcol; ++j) {
+						printf("%d ", matrix1[i][j]);
+					}
+					printf("\n");
 				}
+
 				printf("\n");
+
+				for (int i = 0; i < rowcol; ++i) {
+					for (int j = 0; j < rowcol; ++j) {
+						printf("%d ", matrix2[i][j]);
+					}
+					printf("\n");
+				}
 			}
 			break;
 
