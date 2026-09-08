@@ -121,14 +121,19 @@ void insertBottom(int x, int y, int z) {
         printf("맨 위 칸이 차 있어 더 이상 밀어올릴 수 없습니다.\n");
         return;
     }
+
     // 데이터 위로 1칸씩 이동
-    for (int i = MAX_POINTS - 1; i > 0; i--) {
-        list[i] = list[i - 1];
+    if(list[0].is_valid == 1) {
+        for (int i = MAX_POINTS - 1; i > 0; i--) {
+            list[i] = list[i - 1];
+        }
     }
+
     list[0].x = x;
     list[0].y = y;
     list[0].z = z;
     list[0].is_valid = 1;
+
 }
 
 // d: 맨 아래(0번) 데이터 삭제

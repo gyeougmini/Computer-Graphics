@@ -1,7 +1,8 @@
-#define _CRT_SECURE_NO_WARNINGS
+﻿#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <windows.h>
 
 #define BASE_BOARD_SIZE 30
 #define MIN_BOARD_SIZE 10
@@ -16,6 +17,10 @@ typedef struct {
 
 int board_size = BASE_BOARD_SIZE;
 Rect r1, r2;
+
+void setColor(unsigned short color) {
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
+}
 
 // 모듈러 연산 래퍼 (음수 인덱스 대응)
 int wrap(int val, int max_val) {
@@ -39,15 +44,19 @@ void draw_board() {
             bool in2 = is_inside(r2, x, y, board_size);
 
             if (in1 && in2) {
+                setColor(11);
                 printf("# ");      // 두 도형이 겹치는 영역
             }
             else if (in1) {
+                setColor(7);
                 printf("O ");      // 1번 도형
             }
             else if (in2) {
+                setColor(7);
                 printf("X ");      // 2번 도형
             }
             else {
+                setColor(7);
                 printf(". ");      // 빈 칸
             }
         }
