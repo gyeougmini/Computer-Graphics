@@ -5,8 +5,8 @@
 #include <cstdlib>
 #include <ctime>
 
-const int WINDOW_WIDTH = 800;
-const int WINDOW_HEIGHT = 600;
+const int WINDOW_WIDTH = 1020;
+const int WINDOW_HEIGHT = 960;
 
 struct Color {
     float r, g, b;

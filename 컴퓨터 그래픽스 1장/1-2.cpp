@@ -71,7 +71,7 @@ void addRect(int quad) {
     case 4: cx = 0.5f;  cy = -0.5f; break; // 우하단
     }
 
-    // 기본 랜덤 크기 (half-size: 0.1 ~ 0.35)
+    // 기본 랜덤 크기 (0.1 ~ 0.35)
     float size = 0.1f + ((float)rand() / RAND_MAX) * 0.25f;
 
     Rect newRect = { quad, cx, cy, size, getRandomColor() };
