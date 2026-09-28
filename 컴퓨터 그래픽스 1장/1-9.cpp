@@ -1,4 +1,4 @@
-#include <GL/glew.h>
+﻿#include <GL/glew.h>
 #include <GL/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,10 +7,6 @@
 
 #define MAX_TRIANGLES 5
 #define PI 3.14159265358979323846f
-
-// ==========================================
-// 1. GLSL 셰이더 소스코드 (C 문자열)
-// ==========================================
 
 const char* vertexShaderSource =
 "#version 330 core\n"
@@ -38,10 +34,6 @@ const char* fragmentShaderSource =
 "{\n"
 "    FragColor = uColor;\n"
 "}\n";
-
-// ==========================================
-// 2. 구조체 및 전역 변수
-// ==========================================
 
 typedef enum {
     MOVE_NONE = 0,
@@ -80,10 +72,6 @@ GLuint shaderProgramID;
 GLuint triVAO, triVBO;
 
 double lastTime = 0.0;
-
-// ==========================================
-// 3. 셰이더 및 버퍼 관리
-// ==========================================
 
 GLuint makeShader(GLenum type, const char* source) {
     GLuint shader = glCreateShader(type);
@@ -182,9 +170,6 @@ void addTriangle(float x, float y) {
     triangleCount++;
 }
 
-// ==========================================
-// 4. 이동 및 회전 업데이트 (실습 9)
-// ==========================================
 
 void updateTriangles(float deltaTime) {
     if (currentMoveMode == MOVE_NONE) return;
@@ -270,9 +255,6 @@ void updateTriangles(float deltaTime) {
     }
 }
 
-// ==========================================
-// 5. 콜백 함수 (토글 키보드 & 마우스 클릭)
-// ==========================================
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (action != GLFW_PRESS) return;
@@ -346,9 +328,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
 }
 
-// ==========================================
-// 6. 렌더링 함수
-// ==========================================
 
 void DrawScene() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -378,9 +357,6 @@ void DrawScene() {
     glBindVertexArray(0);
 }
 
-// ==========================================
-// 7. 메인 함수
-// ==========================================
 
 int main(int argc, char** argv) {
     srand((unsigned int)time(NULL));

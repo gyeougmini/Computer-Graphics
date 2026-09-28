@@ -6,10 +6,6 @@
 
 #define MAX_SHAPES 50
 
-// ==========================================
-// 1. GLSL 셰이더 소스코드 (C 문자열)
-// ==========================================
-
 // 버텍스 셰이더
 const char* vertexShaderSource =
 "#version 330 core\n"
@@ -30,9 +26,6 @@ const char* fragmentShaderSource =
 "    FragColor = uColor;\n"
 "}\n";
 
-// ==========================================
-// 2. 구조체 및 전역 변수
-// ==========================================
 
 typedef enum {
     TYPE_POINT,
@@ -61,9 +54,6 @@ GLuint lineVAO, lineVBO;
 GLuint triVAO, triVBO;
 GLuint rectVAO, rectVBO;
 
-// ==========================================
-// 3. 셰이더 생성 및 컴파일 함수
-// ==========================================
 
 GLuint makeShader(GLenum type, const char* source) {
     GLuint shader = glCreateShader(type);
@@ -111,9 +101,6 @@ Color getRandomColor() {
     return c;
 }
 
-// ==========================================
-// 4. 버퍼 초기화 (VAO / VBO)
-// ==========================================
 
 void initBuffers() {
     // 1. 점 (Point)
@@ -174,9 +161,6 @@ void initBuffers() {
     glBindVertexArray(0);
 }
 
-// ==========================================
-// 5. 이벤트 핸들러 및 렌더링
-// ==========================================
 
 void addShape(ShapeType type) {
     if (shapeCount >= MAX_SHAPES) {
@@ -351,9 +335,6 @@ void DrawScene() {
     }
 }
 
-// ==========================================
-// 6. 메인 함수
-// ==========================================
 
 int main(int argc, char** argv) {
     srand((unsigned int)time(NULL));

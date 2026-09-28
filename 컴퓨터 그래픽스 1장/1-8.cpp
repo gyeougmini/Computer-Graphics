@@ -4,10 +4,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-// ==========================================
-// 1. GLSL 셰이더 소스코드 (C 문자열)
-// ==========================================
-
 // 버텍스 셰이더
 const char* vertexShaderSource =
 "#version 330 core\n"
@@ -30,9 +26,6 @@ const char* fragmentShaderSource =
 "    FragColor = uColor;\n"
 "}\n";
 
-// ==========================================
-// 2. 구조체 및 전역 변수
-// ==========================================
 
 typedef struct {
     float r, g, b;
@@ -56,9 +49,6 @@ GLuint shaderProgramID;
 GLuint triVAO, triVBO;
 GLuint axisVAO, axisVBO;
 
-// ==========================================
-// 3. 셰이더 및 버퍼 설정 함수
-// ==========================================
 
 GLuint makeShader(GLenum type, const char* source) {
     GLuint shader = glCreateShader(type);
@@ -246,9 +236,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
 }
 
-// ==========================================
-// 5. 렌더링 함수
-// ==========================================
 
 void DrawScene() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -287,9 +274,6 @@ void DrawScene() {
     glBindVertexArray(0);
 }
 
-// ==========================================
-// 6. 메인 함수
-// ==========================================
 
 int main(int argc, char** argv) {
     srand((unsigned int)time(NULL));
