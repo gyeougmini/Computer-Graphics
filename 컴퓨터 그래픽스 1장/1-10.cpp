@@ -5,9 +5,6 @@
 #include <time.h>
 #include <math.h>
 
-// ==========================================
-// 1. 상수
-// ==========================================
 #define WIN_W       1000          // 월드 좌표 가로 (픽셀 단위로 사용)
 #define WIN_H       700           // 월드 좌표 세로
 #define DIVIDER_X   600.0f        // 좌측(도형) / 우측(모양판) 경계
@@ -22,11 +19,7 @@
 
 enum { SHAPE_SQUARE = 0, SHAPE_EQUI = 1, SHAPE_RIGHT = 2, SHAPE_COUNT = 3 };
 
-// ==========================================
-// 2. 셰이더
-//    - 월드 좌표(픽셀, 원점 좌하단)를 받아서 셰이더 안에서
-//      크기 -> 회전 -> 이동 -> NDC 변환까지 처리
-// ==========================================
+
 const char* vertexShaderSource =
 "#version 330 core\n"
 "layout (location = 0) in vec2 vPos;\n"
@@ -53,9 +46,7 @@ const char* fragmentShaderSource =
 "    FragColor = uColor;\n"
 "}\n";
 
-// ==========================================
-// 3. 자료구조
-// ==========================================
+
 typedef struct {
     float r, g, b;
 } Color;
@@ -114,9 +105,7 @@ GLuint shapeVAO[SHAPE_COUNT], shapeVBO[SHAPE_COUNT], squareEBO;
 GLuint lineVAO, lineVBO;
 GLint  offsetLoc, scaleLoc, angleLoc, screenLoc, colorLoc;
 
-// ==========================================
-// 4. 셰이더 / 버퍼 초기화
-// ==========================================
+
 GLuint makeShader(GLenum type, const char* source) {
     GLuint shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, NULL);
@@ -187,9 +176,7 @@ void initBuffers() {
     glBindVertexArray(0);
 }
 
-// ==========================================
-// 5. 게임 데이터 초기화 (모양판 / 도형)
-// ==========================================
+
 float randRange(float a, float b) {
     return a + ((float)rand() / RAND_MAX) * (b - a);
 }
@@ -302,9 +289,7 @@ void resetGame() {
     printf("리셋: 도형 %d개 생성\n", pieceCount);
 }
 
-// ==========================================
-// 6. 선택 / 스냅 처리
-// ==========================================
+
 float edgeSign(float px, float py, float ax, float ay, float bx, float by) {
     return (px - bx) * (ay - by) - (ax - bx) * (py - by);
 }
@@ -409,9 +394,7 @@ void trySnap(int idx) {
     }
 }
 
-// ==========================================
-// 7. 콜백 함수
-// ==========================================
+
 // 창 크기가 바뀌어도 월드 좌표(1000x700) 기준으로 변환
 void cursorToWorld(GLFWwindow* window, float* wx, float* wy) {
     double xpos, ypos;
@@ -493,9 +476,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-// ==========================================
-// 8. 그리기
-// ==========================================
+
 void setTransform(float x, float y, float sx, float sy, float angle) {
     glUniform2f(offsetLoc, x, y);
     glUniform2f(scaleLoc, sx, sy);
@@ -566,9 +547,7 @@ void DrawScene() {
     glBindVertexArray(0);
 }
 
-// ==========================================
-// 9. 메인
-// ==========================================
+
 int main(int argc, char** argv) {
     srand((unsigned int)time(NULL));
 

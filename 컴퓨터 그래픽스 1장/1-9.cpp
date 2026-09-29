@@ -39,9 +39,6 @@ const char* fragmentShaderSource =
 "    FragColor = uColor;\n"
 "}\n";
 
-// ==========================================
-// 2. 자료구조
-// ==========================================
 
 #define PI_F 3.14159265f
 #define TRAIL_MAX 1500   // 스파이럴 경로로 저장할 최대 점 개수 (삼각형 1개당)
@@ -103,9 +100,6 @@ GLuint trailVAO, trailVBO;   // 경로 선 그리기용 (매 프레임 내용 �
 
 const float ZIG_STEP = 0.15f;      // 좌우 지그재그에서 한 줄 간격
 
-// ==========================================
-// 3. 셰이더 / 버퍼 초기화
-// ==========================================
 
 GLuint makeShader(GLenum type, const char* source) {
     GLuint shader = glCreateShader(type);
@@ -189,9 +183,6 @@ void initBuffers() {
     glBindVertexArray(0);
 }
 
-// ==========================================
-// 4. 이동 로직
-// ==========================================
 
 // 삼각형이 회전해도 화면 밖으로 안 나가게 하는 여유 반경
 float getRadius(const Triangle* t) {
@@ -315,7 +306,7 @@ int updateSpiral(Triangle* t, float dt) {
     float R = getRadius(t);
 
     t->theta += t->omega * dt;
-    t->radius += 0.12f * dt;
+    t->radius += 0.04f * dt;
 
     float nx = t->cx + t->radius * cosf(t->theta);
     float ny = t->cy + t->radius * sinf(t->theta);
@@ -351,7 +342,7 @@ void updateTriangles(float dt) {
         case MOVE_SPIRAL:
             if (updateSpiral(t, dt)) {
                 // 원래 위치로 순간이동한 프레임은 방향 계산을 건너뜀
-                // (안 그러면 벽→중심 방향으로 한 프레임 휙 돌아감)
+                // (안 그러면 벽->중심 방향으로 한 프레임 휙 돌아감)
                 addTrailPoint(t);
                 continue;
             }
@@ -363,15 +354,12 @@ void updateTriangles(float dt) {
         // 모델의 머리가 +y이므로 -90도 보정
         float dx = t->posX - oldX;
         float dy = t->posY - oldY;
-        if (fabsf(dx) > 1e-6f || fabsf(dy) > 1e-6f) {
+        if (fabsf(dx) > 0 || fabsf(dy) > 0) {
             t->angle = atan2f(dy, dx) - PI_F / 2.0f;
         }
     }
 }
 
-// ==========================================
-// 5. 삼각형 초기화
-// ==========================================
 
 void setTriangle(Triangle* t, float x, float y, float scale) {
     t->active = 1;
@@ -409,9 +397,6 @@ int findNearestTriangle(float x, float y) {
     return best;
 }
 
-// ==========================================
-// 6. 콜백 함수
-// ==========================================
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (action != GLFW_PRESS) return;
@@ -474,9 +459,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-// ==========================================
-// 7. 그리기
-// ==========================================
 
 void DrawScene() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -528,9 +510,6 @@ void DrawScene() {
     glBindVertexArray(0);
 }
 
-// ==========================================
-// 8. main
-// ==========================================
 
 int main(int argc, char** argv) {
     srand((unsigned int)time(NULL));
