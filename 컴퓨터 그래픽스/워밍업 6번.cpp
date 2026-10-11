@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS
+ï»¿#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,24 +11,24 @@
 #define MAX_FACES    1000
 #define EPSILON      1e-6f
 
-// 3D Á¤Á¡ ±¸Á¶Ã¼
+// 3D ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ã¼
 typedef struct {
     float x, y, z;
 } Vertex;
 
-// 2D ÅØ½ºÃ³ ÁÂÇ¥ ±¸Á¶Ã¼
+// 2D ï¿½Ø½ï¿½Ã³ ï¿½ï¿½Ç¥ ï¿½ï¿½ï¿½ï¿½Ã¼
 typedef struct {
     float u, v;
 } TexCoord;
 
-// »ï°¢Çü ¸é Á¤º¸ ±¸Á¶Ã¼
+// ï¿½ï°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ã¼
 typedef struct {
     int v[3];   // 1-based vertex indices
-    int vt[3];  // 1-based texture indices (ÅØ½ºÃ³ ¹ÌÁöÁ¤ ½Ã 0)
+    int vt[3];  // 1-based texture indices (ï¿½Ø½ï¿½Ã³ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ 0)
     int has_texture;
 } Face;
 
-Vertex g_vertices[MAX_VERTICES + 1]; // 1-based index »ç¿ë
+Vertex g_vertices[MAX_VERTICES + 1]; // 1-based index ï¿½ï¿½ï¿½
 TexCoord g_textures[MAX_TEXTURES + 1];
 Face g_faces[MAX_FACES];
 
@@ -36,7 +36,7 @@ int g_vertex_count = 0;
 int g_texture_count = 0;
 int g_face_count = 0;
 
-// ¼±Çà/ÈÄÇà °ø¹é Á¦°Å
+// ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 char* trim_whitespace(char* str) {
     while (isspace((unsigned char)*str)) str++;
     if (*str == 0) return str;
@@ -46,14 +46,14 @@ char* trim_whitespace(char* str) {
     return str;
 }
 
-// ºÎµ¿¼Ò¼öÁ¡ ºñ±³
+// ï¿½Îµï¿½ï¿½Ò¼ï¿½ï¿½ï¿½ ï¿½ï¿½
 int are_vertices_equal(Vertex a, Vertex b) {
     return (fabsf(a.x - b.x) < EPSILON &&
         fabsf(a.y - b.y) < EPSILON &&
         fabsf(a.z - b.z) < EPSILON);
 }
 
-// ÀüÃ¼ Á¤Á¡ Áßº¹ Ã¼Å©
+// ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½ ï¿½ßºï¿½ Ã¼Å©
 void check_duplicate_vertices() {
     int duplicate_found = 0;
     for (int i = 1; i <= g_vertex_count; i++) {
@@ -70,15 +70,15 @@ void check_duplicate_vertices() {
     }
 }
 
-// face ¶óÀÎ ÆÄ½Ì ¹× À¯È¿¼º °Ë»ç
+// face ï¿½ï¿½ï¿½ï¿½ ï¿½Ä½ï¿½ ï¿½ï¿½ ï¿½ï¿½È¿ï¿½ï¿½ ï¿½Ë»ï¿½
 int parse_face_line(char* args, int line_num) {
-    // °ø¹éÀ» ±âÁØÀ¸·Î ÅäÅ« ºÐ¸®
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å« ï¿½Ð¸ï¿½
     char* tokens[10];
     int token_count = 0;
 
     char* token = strtok(args, " \t\r\n");
     while (token != NULL) {
-        // ÀÎ¶óÀÎ ÁÖ¼®(#)ÀÌ ³ª¿À¸é ±× ÀÌÈÄ´Â ¹«½Ã
+        // ï¿½Î¶ï¿½ï¿½ï¿½ ï¿½Ö¼ï¿½(#)ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ä´ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (token[0] == '#') break;
         if (token_count < 10) {
             tokens[token_count++] = token;
@@ -86,7 +86,7 @@ int parse_face_line(char* args, int line_num) {
         token = strtok(NULL, " \t\r\n");
     }
 
-    // ¿¹¿Ü Ã³¸® 1: »ï°¢Çü ²ÀÁþÁ¡ÀÌ 3°³°¡ ¾Æ´Ñ °æ¿ì
+    // ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ 1: ï¿½ï°¢ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 3ï¿½ï¿½ï¿½ï¿½ ï¿½Æ´ï¿½ ï¿½ï¿½ï¿½
     if (token_count != 3) {
         printf("[Error Line %d] Face does not form a triangle! (Found %d vertices, expected 3)\n", line_num, token_count);
         return 0;
@@ -99,7 +99,7 @@ int parse_face_line(char* args, int line_num) {
         int v_idx = 0;
         int vt_idx = 0;
 
-        // "v/vt" ¶Ç´Â "v" Çü½Ä ÆÄ½Ì
+        // "v/vt" ï¿½Ç´ï¿½ "v" ï¿½ï¿½ï¿½ï¿½ ï¿½Ä½ï¿½
         char* slash = strchr(tokens[i], '/');
         if (slash != NULL) {
             *slash = '\0';
@@ -112,13 +112,13 @@ int parse_face_line(char* args, int line_num) {
             vt_idx = 0;
         }
 
-        // ¿¹¿Ü Ã³¸® 4: 0 ÀÌÇÏ ¶Ç´Â ¼ýÀÚ°¡ ¾Æ´Ñ Àß¸øµÈ ÀÎµ¦½º
+        // ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ 4: 0 ï¿½ï¿½ï¿½ï¿½ ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½Ú°ï¿½ ï¿½Æ´ï¿½ ï¿½ß¸ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½
         if (v_idx <= 0) {
             printf("[Error Line %d] Invalid vertex index '%s' in face.\n", line_num, tokens[i]);
             return 0;
         }
 
-        // ¿¹¿Ü Ã³¸® 3: ÀÎµ¦½º ¹üÀ§ ÃÊ°ú
+        // ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ 3: ï¿½Îµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê°ï¿½
         if (v_idx > g_vertex_count) {
             printf("[Error Line %d] Vertex index %d out of range (Total vertices: %d)!\n", line_num, v_idx, g_vertex_count);
             return 0;
@@ -135,7 +135,7 @@ int parse_face_line(char* args, int line_num) {
         f.vt[i] = vt_idx;
     }
 
-    // ¿¹¿Ü Ã³¸® 2: ¸é ³»¿¡¼­ µ¿ÀÏÇÑ Á¤Á¡ ÀÎµ¦½º°¡ Áßº¹ »ç¿ëµÈ °æ¿ì (»ï°¢Çü ºÒ°¡)
+    // ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ 2: ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ßºï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ (ï¿½ï°¢ï¿½ï¿½ ï¿½Ò°ï¿½)
     if (f.v[0] == f.v[1] || f.v[1] == f.v[2] || f.v[0] == f.v[2]) {
         printf("[Error Line %d] Degenerate triangle! Duplicate vertex indices in face (%d, %d, %d)\n",
             line_num, f.v[0], f.v[1], f.v[2]);
@@ -148,20 +148,20 @@ int parse_face_line(char* args, int line_num) {
     return 1;
 }
 
-// °á°ú Ãâ·Â
+// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 void print_results() {
     printf("\n==================== [ Parsing Results ] ====================\n");
     for (int i = 0; i < g_face_count; i++) {
         Face f = g_faces[i];
         printf("Face %d (%d, %d, %d): ", i + 1, f.v[0], f.v[1], f.v[2]);
 
-        // Vertex ÁÂÇ¥ Ãâ·Â
+        // Vertex ï¿½ï¿½Ç¥ ï¿½ï¿½ï¿½
         printf("vertex (%.1f, %.1f, %.1f) (%.1f, %.1f, %.1f) (%.1f, %.1f, %.1f)",
             g_vertices[f.v[0]].x, g_vertices[f.v[0]].y, g_vertices[f.v[0]].z,
             g_vertices[f.v[1]].x, g_vertices[f.v[1]].y, g_vertices[f.v[1]].z,
             g_vertices[f.v[2]].x, g_vertices[f.v[2]].y, g_vertices[f.v[2]].z);
 
-        // Texture ÁÂÇ¥ Ãâ·Â (Á¸ÀçÇÏ´Â °æ¿ì)
+        // Texture ï¿½ï¿½Ç¥ ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½)
         if (f.has_texture) {
             printf("\n          texture (%.1f, %.1f) (%.1f, %.1f) (%.1f, %.1f)",
                 g_textures[f.vt[0]].u, g_textures[f.vt[0]].v,
@@ -177,14 +177,14 @@ void print_results() {
 
 int main(void) {
     char filename[256];
-    printf("ÅØ½ºÆ® µ¥ÀÌÅÍ ÆÄÀÏ °æ·Î¸¦ ÀÔ·ÂÇÏ¼¼¿ä (¿¹: test.txt): ");
+    printf("ï¿½Ø½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Î¸ï¿½ ï¿½Ô·ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½ (ï¿½ï¿½: test.txt): ");
     if (scanf("%255s", filename) != 1) {
         return 1;
     }
 
     FILE* fp = fopen(filename, "r");
     if (!fp) {
-        printf("ÆÄÀÏÀ» ¿­ ¼ö ¾ø½À´Ï´Ù: %s\n", filename);
+        printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½: %s\n", filename);
         return 1;
     }
 
@@ -195,17 +195,17 @@ int main(void) {
         line_num++;
         char* p = trim_whitespace(line);
 
-        // ºó ÁÙÀÌ°Å³ª ÁÖ¼®ÀÎ °æ¿ì °Ç³Ê¶Ü
+        // ï¿½ï¿½ ï¿½ï¿½ï¿½Ì°Å³ï¿½ ï¿½Ö¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ç³Ê¶ï¿½
         if (*p == '\0' || *p == '#') continue;
 
-        // ÀÎ¶óÀÎ ÁÖ¼® Á¦°Å (¿¹: v 0.0 0.8 0.0 #5: ²À´ë±â...)
+        // ï¿½Î¶ï¿½ï¿½ï¿½ ï¿½Ö¼ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½: v 0.0 0.8 0.0 #5: ï¿½ï¿½ï¿½ï¿½ï¿½...)
         char* comment_pos = strchr(p, '#');
         if (comment_pos) {
             *comment_pos = '\0';
             p = trim_whitespace(p);
         }
 
-        // ¸í·É¾î ½Äº°
+        // ï¿½ï¿½É¾ï¿½ ï¿½Äºï¿½
         if (strncmp(p, "vt", 2) == 0 && isspace((unsigned char)p[2])) {
             float u, v;
             if (sscanf(p + 2, "%f %f", &u, &v) == 2) {
@@ -243,7 +243,7 @@ int main(void) {
 
     fclose(fp);
 
-    // ÆÄ½Ì ¿Ï·á ÈÄ °á°ú ¹× ¿¹¿ÜÃ³¸® °Ë»ç °á°ú Ãâ·Â
+    // ï¿½Ä½ï¿½ ï¿½Ï·ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ã³ï¿½ï¿½ ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
     print_results();
 
     return 0;

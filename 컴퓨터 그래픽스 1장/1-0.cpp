@@ -1,17 +1,46 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cstdlib>
+#include <ctime>
 #include <GL/glew.h>
 #include <GL/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-
 GLuint shaderProgramID;
-GLuint vao, vbo[2];
+GLuint cubevao, cubevbo[2];
+GLuint pyramidvao, pyramidvbo[2];
+GLuint axisvao, axisvbo[2];
 
-// 셰이더 파일 읽기 함수
+// 기본 위치 및 회전 상태
+float xPos = 0.0f, yPos = 0.0f, zPos = 0.0f;
+bool isDepthTest = true;
+bool isPyramidMode = false; // false: 정육면체, true: 피라미드
+
+// Y축 자전
+bool rotateY = false;
+float yAngle = 0.0f;
+
+
+bool animT = false; float angleT = 0.0f;
+bool animF = false; float angleF = 0.0f; float dirF = 1.0f;
+bool animS = false; float angleS = 0.0f;
+bool animB = false; float scaleB = 1.0f; float dirB = -1.0f;
+
+bool anim1 = false; float angle1 = 0.0f; int sidePair1 = 0;
+bool anim2 = false; float angle2 = 0.0f; int sidePair2 = 0;
+bool anim4 = false; float angle4 = 0.0f;
+bool anim5 = false; float angle5 = 0.0f;
+
+
+
+bool anim6 = false; float angle6 = 0.0f; float dir6 = 1.0f;
+bool anim7 = false; float angle7 = 0.0f; int sideIndex7 = 0; float dir7 = 1.0f;
+bool anim8 = false; float currAngle8 = 0.0f;  float targetAngle8 = 0.0f; int pair8 = 0;
+bool anim9 = false; float angle9 = 0.0f; float dir9 = 1.0f;
+
 std::string filetobuf(const char* file) {
     std::ifstream shaderFile(file);
     if (!shaderFile.is_open()) return "";
@@ -19,8 +48,8 @@ std::string filetobuf(const char* file) {
 }
 
 void InitShader() {
-    std::string vStr = filetobuf("vertex.glsl");
-    std::string fStr = filetobuf("fragment.glsl");
+    std::string vStr = filetobuf("vertex16.glsl");
+    std::string fStr = filetobuf("fragment16.glsl");
     const char* vSrc = vStr.c_str();
     const char* fSrc = fStr.c_str();
 
@@ -42,39 +71,26 @@ void InitShader() {
 }
 
 void InitBuffer() {
+
     GLfloat cubeShape[36][3] = {
-        // 앞면
+        // 앞면 (0)
         {-0.5f,-0.5f, 0.5f}, { 0.5f,-0.5f, 0.5f}, { 0.5f, 0.5f, 0.5f},
         { 0.5f, 0.5f, 0.5f}, {-0.5f, 0.5f, 0.5f}, {-0.5f,-0.5f, 0.5f},
-        // 뒷면
+        // 뒷면 (1)
         {-0.5f,-0.5f,-0.5f}, {-0.5f, 0.5f,-0.5f}, { 0.5f, 0.5f,-0.5f},
         { 0.5f, 0.5f,-0.5f}, { 0.5f,-0.5f,-0.5f}, {-0.5f,-0.5f,-0.5f},
-        // 윗면
+        // 윗면 (2)
         {-0.5f, 0.5f,-0.5f}, {-0.5f, 0.5f, 0.5f}, { 0.5f, 0.5f, 0.5f},
         { 0.5f, 0.5f, 0.5f}, { 0.5f, 0.5f,-0.5f}, {-0.5f, 0.5f,-0.5f},
-        // 밑면
+        // 밑면 (3)
         {-0.5f,-0.5f,-0.5f}, { 0.5f,-0.5f,-0.5f}, { 0.5f,-0.5f, 0.5f},
         { 0.5f,-0.5f, 0.5f}, {-0.5f,-0.5f, 0.5f}, {-0.5f,-0.5f,-0.5f},
-        // 오른면
+        // 오른면 (4)
         { 0.5f,-0.5f,-0.5f}, { 0.5f, 0.5f,-0.5f}, { 0.5f, 0.5f, 0.5f},
         { 0.5f, 0.5f, 0.5f}, { 0.5f,-0.5f, 0.5f}, { 0.5f,-0.5f,-0.5f},
-        // 왼면
+        // 왼면 (5)
         {-0.5f,-0.5f,-0.5f}, {-0.5f,-0.5f, 0.5f}, {-0.5f, 0.5f, 0.5f},
         {-0.5f, 0.5f, 0.5f}, {-0.5f, 0.5f,-0.5f}, {-0.5f,-0.5f,-0.5f}
-    };
-
-    GLfloat pyramid[18][3] = {
-        // 아랫면
-        {-0.5f,-0.5f,-0.5f}, { 0.5f,-0.5f,-0.5f}, { 0.5f,-0.5f, 0.5f},
-        { 0.5f,-0.5f, 0.5f}, {-0.5f,-0.5f, 0.5f}, {-0.5f,-0.5f,-0.5f},
-        // 앞면
-        { 0.5f, -0.5f, 0.5f}, { 0.5f, -0.5f, -0.5f}, { 0.0f, 0.5f, 0.0f},
-        // 뒷면
-        {-0.5f, -0.5f, -0.5f}, {-0.5f, -0.5f, 0.5f}, { 0.0f, 0.5f, 0.0f},
-        // 오른면
-        {0.5f, -0.5f, -0.5f}, {-0.5f, -0.5f, -0.5f}, { 0.0f, 0.5f, 0.0f},
-        // 왼면
-        {-0.5f, -0.5f, 0.5f}, {0.5f, -0.5f, 0.5f}, { 0.0f, 0.5f, 0.0f}
     };
 
     GLfloat cubeColors[36][3];
@@ -88,150 +104,476 @@ void InitBuffer() {
         else { cubeColors[i][0] = 0.0f; cubeColors[i][1] = 1.0f; cubeColors[i][2] = 1.0f; } // 청록
     }
 
+
+    GLfloat pyramid[18][3] = {
+        // 아랫면 (0)
+        {-0.5f,-0.5f,-0.5f}, { 0.5f,-0.5f,-0.5f}, { 0.5f,-0.5f, 0.5f},
+        { 0.5f,-0.5f, 0.5f}, {-0.5f,-0.5f, 0.5f}, {-0.5f,-0.5f,-0.5f},
+        // 앞면 (1)
+        { 0.5f, -0.5f, 0.5f}, {-0.5f, -0.5f, 0.5f}, { 0.0f, 0.5f, 0.0f},
+        // 오른면 (2)
+        { 0.5f, -0.5f, -0.5f}, { 0.5f, -0.5f, 0.5f}, { 0.0f, 0.5f, 0.0f},
+        // 뒷면 (3)
+        {-0.5f, -0.5f, -0.5f}, { 0.5f, -0.5f, -0.5f}, { 0.0f, 0.5f, 0.0f},
+        // 왼면 (4)
+        {-0.5f, -0.5f, 0.5f}, {-0.5f, -0.5f, -0.5f}, { 0.0f, 0.5f, 0.0f}
+    };
+
     GLfloat pyramidColors[18][3];
     for (int i = 0; i < 18; i++) {
-        int face = i / 3;
-        if (face == 0 || face == 1) { pyramidColors[i][0] = 1.0f; pyramidColors[i][1] = 0.0f; pyramidColors[i][2] = 0.0f; } // 빨강
-        else if (face == 2) { pyramidColors[i][0] = 0.0f; pyramidColors[i][1] = 1.0f; pyramidColors[i][2] = 0.0f; } // 초록
-        else if (face == 3) { pyramidColors[i][0] = 0.0f; pyramidColors[i][1] = 0.0f; pyramidColors[i][2] = 1.0f; } // 파랑
-        else if (face == 4) { pyramidColors[i][0] = 1.0f; pyramidColors[i][1] = 1.0f; pyramidColors[i][2] = 0.0f; } // 노랑
-        else if (face == 5) { pyramidColors[i][0] = 1.0f; pyramidColors[i][1] = 0.0f; pyramidColors[i][2] = 1.0f; } // 자홍
-        else { pyramidColors[i][0] = 0.0f; pyramidColors[i][1] = 1.0f; pyramidColors[i][2] = 1.0f; } // 청록
+        if (i < 6) {
+            pyramidColors[i][0] = 0.5f; pyramidColors[i][1] = 0.5f; pyramidColors[i][2] = 0.5f; // 회색
+        }
+        else {
+            int sideFace = (i - 6) / 3;
+            if (sideFace == 0) { pyramidColors[i][0] = 1.0f; pyramidColors[i][1] = 0.0f; pyramidColors[i][2] = 0.0f; }
+            else if (sideFace == 1) { pyramidColors[i][0] = 0.0f; pyramidColors[i][1] = 1.0f; pyramidColors[i][2] = 0.0f; }
+            else if (sideFace == 2) { pyramidColors[i][0] = 0.0f; pyramidColors[i][1] = 0.0f; pyramidColors[i][2] = 1.0f; }
+            else { pyramidColors[i][0] = 1.0f; pyramidColors[i][1] = 1.0f; pyramidColors[i][2] = 0.0f; }
+        }
     }
 
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    GLfloat axisShape[6][3] = {
+        {-2.0f, 0.0f, 0.0f}, { 2.0f, 0.0f, 0.0f},
+        { 0.0f,-2.0f, 0.0f}, { 0.0f, 2.0f, 0.0f},
+        { 0.0f, 0.0f,-2.0f}, { 0.0f, 0.0f, 2.0f}
+    };
 
-    glGenBuffers(2, vbo);
+    GLfloat axisColors[6][3] = {
+        {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
+        {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}
+    };
 
-    // 0번 VBO: Position
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+    // 정육면체 VBO
+    glGenVertexArrays(1, &cubevao);
+    glBindVertexArray(cubevao);
+    glGenBuffers(2, cubevbo);
+
+    glBindBuffer(GL_ARRAY_BUFFER, cubevbo[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeShape), cubeShape, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, cubevbo[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeColors), cubeColors, GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(1);
+
+    // 피라미드 VBO
+    glGenVertexArrays(1, &pyramidvao);
+    glBindVertexArray(pyramidvao);
+    glGenBuffers(2, pyramidvbo);
+
+    glBindBuffer(GL_ARRAY_BUFFER, pyramidvbo[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(pyramid), pyramid, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
-    // 1번 VBO: Color
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, pyramidvbo[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidColors), pyramidColors, GL_STATIC_DRAW);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(1);
+
+    // 축 VBO
+    glGenVertexArrays(1, &axisvao);
+    glBindVertexArray(axisvao);
+    glGenBuffers(2, axisvbo);
+
+    glBindBuffer(GL_ARRAY_BUFFER, axisvbo[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(axisShape), axisShape, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, axisvbo[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(axisColors), axisColors, GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(1);
+}
+
+void ResetAllAnimations() {
+    rotateY = false; yAngle = 0.0f;
+    animT = false; angleT = 0.0f;
+    animF = false; angleF = 0.0f; dirF = 1.0f;
+    animS = false; angleS = 0.0f;
+    animB = false; scaleB = 1.0f; dirB = -1.0f;
+    anim1 = false; angle1 = 0.0f;
+    anim2 = false; angle2 = 0.0f;
+    anim4 = false; angle4 = 0.0f;
+    anim5 = false; angle5 = 0.0f;
+
+    anim6 = false; angle6 = 0.0f; dir6 = 1.0f;
+    anim7 = false; angle7 = 0.0f; sideIndex7 = 0; dir7 = 1.0f; 
+    anim8 = false; currAngle8 = 0.0f; targetAngle8 = 0.0f; pair8 = 0;
+    anim9 = false; angle9 = 0.0f; dir9 = 1.0f;
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (action != GLFW_PRESS) return;
 
     switch (key) {
-        break;
     case GLFW_KEY_Q:
     case GLFW_KEY_ESCAPE:
         glfwSetWindowShouldClose(window, GLFW_TRUE);
         break;
 
+    case GLFW_KEY_H:
+        isDepthTest = !isDepthTest;
+        break;
+
+    case GLFW_KEY_P:
+        isPyramidMode = !isPyramidMode;
+        break;
+
+    case GLFW_KEY_Y:
+        rotateY = !rotateY;
+        break;
+
+    case GLFW_KEY_R:
+        ResetAllAnimations();
+        isPyramidMode = false;
+        break;
+
+
+    case GLFW_KEY_T: animT = !animT; break;
+    case GLFW_KEY_F:
+        if (!animF) { animF = true; angleF = 0.0f; dirF = 1.0f; }
+        break;
+    case GLFW_KEY_S: animS = !animS; break;
+    case GLFW_KEY_B:
+        if (!animB) { animB = true; scaleB = 1.0f; dirB = -1.0f; }
+        break;
     case GLFW_KEY_1:
+        anim1 = !anim1;
+        if (anim1) sidePair1 = rand() % 4;
         break;
-
     case GLFW_KEY_2:
+        if (!anim2) { anim2 = true; sidePair2 = rand() % 4; angle2 = 0.0f; }
         break;
+    case GLFW_KEY_4: anim4 = !anim4; break;
+    case GLFW_KEY_5: anim5 = !anim5; break;
 
-    case GLFW_KEY_3:
-        break;
 
-    case GLFW_KEY_4:
-        break;
-
-    case GLFW_KEY_5:
-        break;
 
     case GLFW_KEY_6:
+        isPyramidMode = true;
+
+        anim8 = false; currAngle8 = 0.0f; targetAngle8 = 0.0f;
+        anim7 = false; angle7 = 0.0f; sideIndex7 = 0; dir7 = 1.0f;
+        anim9 = false; angle9 = 0.0f; dir9 = 1.0f;
+
+        anim6 = !anim6;
+        if (!anim6) { angle6 = 0.0f; dir6 = 1.0f; }
+        break;
+
+    case GLFW_KEY_7:
+        isPyramidMode = true;
+
+        anim8 = false; currAngle8 = 0.0f; targetAngle8 = 0.0f;
+        anim6 = false; angle6 = 0.0f; dir6 = 1.0f;
+        anim9 = false; angle9 = 0.0f; dir9 = 1.0f;
+
+        anim7 = !anim7;
+        if (!anim7) { angle7 = 0.0f; sideIndex7 = 0; dir7 = 1.0f; }
+        break;
+
+    case GLFW_KEY_8:
+        isPyramidMode = true;
+
+        anim6 = false; angle6 = 0.0f; dir6 = 1.0f;
+        anim7 = false; angle7 = 0.0f; sideIndex7 = 0; dir7 = 1.0f;
+        anim9 = false; angle9 = 0.0f; dir9 = 1.0f;
+
+        if (!anim8) {
+            anim8 = true;
+            pair8 = rand() % 2;
+            targetAngle8 += 180.0f;
+        }
+        break;
+
+    case GLFW_KEY_9:
+        isPyramidMode = true;
+
+        anim8 = false; currAngle8 = 0.0f; targetAngle8 = 0.0f;
+        anim6 = false; angle6 = 0.0f; dir6 = 1.0f;
+        anim7 = false; angle7 = 0.0f; sideIndex7 = 0; dir7 = 1.0f;
+
+        anim9 = !anim9;
+        if (!anim9) { angle9 = 0.0f; dir9 = 1.0f; }
         break;
     }
 }
 
+void UpdateAnimations() {
+    if (rotateY) {
+        yAngle += 1.0f;
+        if (yAngle >= 360.0f) yAngle -= 360.0f;
+    }
+
+    // 육면체 애니메이션 업데이트
+
+    // T키
+    if (animT) { angleT += 2.0f; if (angleT >= 360.0f) angleT -= 360.0f; }
+
+    // F키
+    if (animF) {
+        angleF += dirF * 2.0f;
+        if (angleF >= 120.0f) { angleF = 120.0f; dirF = -1.0f; }
+        else if (angleF <= 0.0f && dirF < 0.0f) { angleF = 0.0f; animF = false; }
+    }
+
+    // S키
+    if (animS) { angleS += 2.0f; if (angleS >= 360.0f) angleS -= 360.0f; }
+
+    // B키
+    if (animB) {
+        scaleB += dirB * 0.02f;
+        if (scaleB <= 0.0f) { scaleB = 0.0f; dirB = 1.0f; }
+        else if (scaleB >= 1.0f && dirB > 0.0f) { scaleB = 1.0f; animB = false; }
+    }
+
+    // 1키
+    if (anim1) { angle1 += 2.0f; if (angle1 >= 360.0f) angle1 -= 360.0f; }
+
+    // 2키
+    if (anim2) {
+        angle2 += 3.0f;
+        if (angle2 >= 270.0f) { angle2 = 270.0f; anim2 = false; }
+    }
+
+    // 4키
+    if (anim4) { angle4 += 1.5f; if (angle4 >= 360.0f) angle4 -= 360.0f; }
+
+    // 5키
+    if (anim5) { angle5 += 1.5f; if (angle5 >= 360.0f) angle5 -= 360.0f; }
+
+
+    // 6키
+    if (anim6) {
+        angle6 += dir6 * 2.0f;
+        if (angle6 >= 180.0f) {
+            angle6 = 180.0f;
+            dir6 = -1.0f;
+        }
+        else if (angle6 <= 0.0f && dir6 < 0.0f) {
+            angle6 = 0.0f;
+            dir6 = 1.0f;
+            anim6 = false;
+        }
+    }
+
+    // 7키
+    if (anim7) {
+        angle7 += dir7 * 2.0f;
+        if (angle7 >= 90.0f) {
+            angle7 = 90.0f;
+            dir7 = -1.0f;
+        }
+        else if (angle7 <= 0.0f && dir7 < 0.0f) {
+            angle7 = 0.0f;
+            dir7 = 1.0f;
+
+            if (sideIndex7 == 3) {
+                sideIndex7 = 0;
+                anim7 = false;
+            }
+            else {
+                sideIndex7++;
+            }
+        }
+    }
+
+    // 8키
+    if (anim8) {
+        currAngle8 += 2.0f;
+        if (currAngle8 >= targetAngle8) {
+            currAngle8 = targetAngle8;
+            anim8 = false;
+        }
+    }
+
+    // 9키
+    if (anim9) {
+        angle9 += dir9 * 1.2f;
+        if (angle9 >= 60.0f) {
+            angle9 = 60.0f;
+            dir9 = -1.0f;
+        }
+        else if (angle9 <= 0.0f && dir9 < 0.0f) {
+            angle9 = 0.0f;
+            dir9 = 1.0f;
+            anim9 = false;
+        }
+    }
+}
+
 void drawScene(GLFWwindow* window) {
-    // 깊이 버퍼와 색상 버퍼 초기화
+    UpdateAnimations();
+
+    if (isDepthTest) glEnable(GL_DEPTH_TEST);
+    else glDisable(GL_DEPTH_TEST);
+
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(shaderProgramID);
 
-    // 1. Model Matrix: 회전(rotate) 없이 기본 단위 행렬 유지
-    glm::mat4 model = glm::mat4(1.0f);
-
-    // 2. View Matrix: 정육면체가 입체적으로 보이도록 카메라를 대각선 방향(X: 1.5, Y: 1.5, Z: 1.5)에 배치
-    // glm::lookAt(카메라 위치, 바라보는 목표 지점, 카메라의 위쪽 방향)
     glm::mat4 view = glm::lookAt(
-        glm::vec3(1.5f, 1.5f, 2.0f), // 카메라를 사선 위에 위치시킴
-        glm::vec3(0.0f, 0.0f, 0.0f), // 원점(정육면체 중심)을 바라봄
-        glm::vec3(0.0f, 1.0f, 0.0f)  // Y축을 위쪽 방향으로 설정
+        glm::vec3(2.5f, 2.0f, 2.5f),
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f)
     );
 
-    // 3. Projection Matrix: 원근 투영 설정
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 600.0f / 600.0f, 0.1f, 100.0f);
-
-    // 최종 Transform 행렬 (P * V * M)
-    glm::mat4 MVP = projection * view * model;
-
-    // Uniform 변수로 Vertex Shader에 전달
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
     GLuint transformLoc = glGetUniformLocation(shaderProgramID, "transform");
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(MVP));
 
-    glBindVertexArray(vao);
+    // 1. 고정 축 렌더링
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glm::mat4 axisMVP = projection * view * glm::mat4(1.0f);
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(axisMVP));
+    glBindVertexArray(axisvao);
+    glLineWidth(1.5f);
+    glDrawArrays(GL_LINES, 0, 6);
 
-    // --- 키보드 입력 체크 및 부분 렌더링 ---
-    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
-        glDrawArrays(GL_TRIANGLES, 0, 6);   // 1번: 앞면
-    }
-    else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
-        glDrawArrays(GL_TRIANGLES, 6, 6);   // 2번: 뒷면
-    }
-    else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
-        glDrawArrays(GL_TRIANGLES, 12, 6);  // 3번: 윗면
-    }
-    else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
-        glDrawArrays(GL_TRIANGLES, 18, 6);  // 4번: 밑면
-    }
-    else if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) {
-        glDrawArrays(GL_TRIANGLES, 24, 6);  // 5번: 오른면
-    }
-    else if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
-        glDrawArrays(GL_TRIANGLES, 30, 6);  // 6번: 왼면
+    // 2. 기본 모델 변환 (기울어짐 + 자전)
+    glm::mat4 baseModel = glm::mat4(1.0f);
+    baseModel = glm::translate(baseModel, glm::vec3(xPos, yPos, zPos));
+    baseModel = glm::rotate(baseModel, glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    baseModel = glm::rotate(baseModel, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    baseModel = glm::rotate(baseModel, glm::radians(yAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    if (!isPyramidMode) {
+        // --- 정육면체 렌더링 ---
+        glBindVertexArray(cubevao);
+        for (int i = 0; i < 6; i++) {
+            glm::mat4 faceModel = baseModel;
+
+            if (anim4 && (i == 0 || i == 1 || i == 4 || i == 5)) {
+                faceModel = glm::rotate(faceModel, glm::radians(angle4), glm::vec3(0.0f, 1.0f, 0.0f));
+            }
+            if (anim5 && (i == 2 || i == 3 || i == 0 || i == 1)) {
+                faceModel = glm::rotate(faceModel, glm::radians(angle5), glm::vec3(1.0f, 0.0f, 0.0f));
+            }
+            if (anim1) {
+                int f1 = sidePair1, f2 = (sidePair1 + 1) % 4;
+                int sideMap[4] = { 0, 4, 1, 5 };
+                if (i == sideMap[f1] || i == sideMap[f2]) {
+                    faceModel = glm::rotate(faceModel, glm::radians(angle1), glm::vec3(0.0f, 1.0f, 0.0f));
+                }
+            }
+            if (anim2 || angle2 > 0.0f) {
+                int sideMap[4] = { 0, 4, 1, 5 };
+                int f1 = sideMap[sidePair2];
+                int f2 = sideMap[(sidePair2 + 1) % 4];
+                if (i == f1) faceModel = glm::rotate(faceModel, glm::radians(-angle2), glm::vec3(0.0f, 1.0f, 0.0f));
+                else if (i == f2) faceModel = glm::rotate(faceModel, glm::radians(angle2), glm::vec3(0.0f, 1.0f, 0.0f));
+            }
+
+            if (i == 2 && animT) {
+                faceModel = glm::translate(faceModel, glm::vec3(0.0f, 0.5f, 0.0f));
+                faceModel = glm::rotate(faceModel, glm::radians(angleT), glm::vec3(0.0f, 0.0f, 1.0f));
+                faceModel = glm::translate(faceModel, glm::vec3(0.0f, -0.5f, 0.0f));
+            }
+            else if (i == 0 && (animF || angleF > 0.0f)) {
+                faceModel = glm::translate(faceModel, glm::vec3(0.0f, 0.5f, 0.5f));
+                faceModel = glm::rotate(faceModel, glm::radians(-angleF), glm::vec3(1.0f, 0.0f, 0.0f));
+                faceModel = glm::translate(faceModel, glm::vec3(0.0f, -0.5f, -0.5f));
+            }
+            else if (i == 4 && animS) {
+                faceModel = glm::translate(faceModel, glm::vec3(0.5f, 0.0f, 0.0f));
+                faceModel = glm::rotate(faceModel, glm::radians(angleS), glm::vec3(1.0f, 0.0f, 0.0f));
+                faceModel = glm::translate(faceModel, glm::vec3(-0.5f, 0.0f, 0.0f));
+            }
+            else if (i == 1 && (animB || scaleB < 1.0f)) {
+                faceModel = glm::translate(faceModel, glm::vec3(0.0f, 0.0f, -0.5f));
+                faceModel = glm::scale(faceModel, glm::vec3(scaleB, scaleB, 1.0f));
+                faceModel = glm::translate(faceModel, glm::vec3(0.0f, 0.0f, 0.5f));
+            }
+
+            glm::mat4 mvp = projection * view * faceModel;
+            glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+            glDrawArrays(GL_TRIANGLES, i * 6, 6);
+        }
     }
     else {
-        // 아무 키도 누르지 않았을 때 (기본 전체 정육면체 출력)
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-    }
 
-    if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
-        glDrawArrays(GL_TRIANGLES, 6, 3);   // 1번: 앞면
-    }
-    else if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) {
-        glDrawArrays(GL_TRIANGLES, 9, 3);   // 2번: 뒷면
-    }
-    else if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS) {
-        glDrawArrays(GL_TRIANGLES, 12, 3);  // 3번: 윗면
-    }
-    else if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) {
-        glDrawArrays(GL_TRIANGLES, 15, 3);  // 4번: 밑면
-    }
-    else {
-        // 아무 키도 누르지 않았을 때 (기본 전체 정육면체 출력)
-        glDrawArrays(GL_TRIANGLES, 0, 18);
+        glBindVertexArray(pyramidvao);
+
+
+        glm::mat4 baseMVP = projection * view * baseModel;
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(baseMVP));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
+        glm::vec3 edgePos[4] = {
+            glm::vec3(0.0f, -0.5f, 0.5f),   // 앞
+            glm::vec3(0.5f, -0.5f, 0.0f),   // 오른
+            glm::vec3(0.0f, -0.5f, -0.5f),  // 뒤
+            glm::vec3(-0.5f, -0.5f, 0.0f)   // 왼
+        };
+
+        glm::vec3 rotAxis[4] = {
+            glm::vec3(1.0f, 0.0f, 0.0f),   // 앞: X축 회전
+            glm::vec3(0.0f, 0.0f, -1.0f),  // 오른: Z축 회전
+            glm::vec3(-1.0f, 0.0f, 0.0f),  // 뒤: -X축 회전
+            glm::vec3(0.0f, 0.0f, 1.0f)    // 왼: -Z축 회전
+        };
+
+        for (int i = 0; i < 4; i++) {
+            glm::mat4 sideModel = baseModel;
+
+            if (anim6) {
+                sideModel = glm::translate(sideModel, edgePos[i]);
+                sideModel = glm::rotate(sideModel, glm::radians(angle6), rotAxis[i]);
+                sideModel = glm::translate(sideModel, -edgePos[i]);
+            }
+
+            if (anim7 && (i == sideIndex7)) {
+                sideModel = glm::translate(sideModel, edgePos[i]);
+                sideModel = glm::rotate(sideModel, glm::radians(angle7), rotAxis[i]);
+                sideModel = glm::translate(sideModel, -edgePos[i]);
+            }
+
+            bool isTargetPair = false;
+            if (pair8 == 0 && (i == 0 || i == 2)) isTargetPair = true;
+            if (pair8 == 1 && (i == 1 || i == 3)) isTargetPair = true;
+
+            if (isTargetPair) {
+                glm::vec3 apex(0.0f, 0.5f, 0.0f);
+                sideModel = glm::translate(sideModel, apex);
+                sideModel = glm::rotate(sideModel, glm::radians(currAngle8), glm::vec3(0.0f, 1.0f, 0.0f));
+                sideModel = glm::translate(sideModel, -apex);
+            }
+
+            if (anim9) {
+                glm::vec3 apex(0.0f, 0.5f, 0.0f);
+                sideModel = glm::translate(sideModel, apex);
+                sideModel = glm::rotate(sideModel, glm::radians(-angle9), rotAxis[i]);
+                sideModel = glm::translate(sideModel, -apex);
+            }
+
+            glm::mat4 sideMVP = projection * view * sideModel;
+            glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(sideMVP));
+            glDrawArrays(GL_TRIANGLES, 6 + i * 3, 3);
+        }
     }
 }
+
 int main() {
+    srand(static_cast<unsigned int>(time(NULL)));
+
     if (!glfwInit()) return -1;
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(600, 600, "OpenGL Triangle Example", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(600, 600, "Practice 15 & 16 Complete", nullptr, nullptr);
     if (!window) { glfwTerminate(); return -1; }
 
     glfwMakeContextCurrent(window);
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) return -1;
-    glEnable(GL_DEPTH_TEST);
 
     InitShader();
     InitBuffer();
