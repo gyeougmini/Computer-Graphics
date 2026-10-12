@@ -243,7 +243,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 void UpdateAnimations(float deltaTime) {
-    // 기본 기준 속도(초당 각도) 설정 (기존 60fps 기준 프레임당 1~2도 였으므로 초당 약 60~120도로 환산)
     float speedMultiplier = deltaTime * 60.0f;
 
     if (rotateY) {
@@ -356,10 +355,24 @@ void drawScene(GLFWwindow* window, float deltaTime) {
             }
 
             if (anim1) {
-                int f1 = sidePair1, f2 = (sidePair1 + 1) % 4;
+                // 옆면 순서: 0(+Z), 4(+X), 1(-Z), 5(-X)
                 int sideMap[4] = { 0, 4, 1, 5 };
-                if (i == sideMap[f1] || i == sideMap[f2]) {
+                int f1 = sideMap[sidePair1];
+                int f2 = sideMap[(sidePair1 + 1) % 4];
+
+                if (i == f1 || i == f2) {
+                    // 선택된 옆면 쌍 사이의 공유 모서리 피벗 좌표
+                    glm::vec3 edgePivot(0.0f);
+
+                    if (sidePair1 == 0)      edgePivot = glm::vec3(0.5f, 0.0f, 0.5f);   // +Z 와 +X 사이 모서리
+                    else if (sidePair1 == 1) edgePivot = glm::vec3(0.5f, 0.0f, -0.5f);  // +X 와 -Z 사이 모서리
+                    else if (sidePair1 == 2) edgePivot = glm::vec3(-0.5f, 0.0f, -0.5f); // -Z 와 -X 사이 모서리
+                    else if (sidePair1 == 3) edgePivot = glm::vec3(-0.5f, 0.0f, 0.5f);  // -X 와 +Z 사이 모서리
+
+                    // 공유 모서리를 기준축으로 피벗 변환 적용
+                    faceModel = glm::translate(faceModel, edgePivot);
                     faceModel = glm::rotate(faceModel, glm::radians(angle1), glm::vec3(0.0f, 1.0f, 0.0f));
+                    faceModel = glm::translate(faceModel, -edgePivot);
                 }
             }
 

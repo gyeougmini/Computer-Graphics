@@ -425,10 +425,25 @@ void drawScene(GLFWwindow* window, float deltaTime) {
             }
 
             if (anim1) {
-                int f1 = sidePair1, f2 = (sidePair1 + 1) % 4;
+                // 옆면 쌍: 0(+Z), 4(+X), 1(-Z), 5(-X)
                 int sideMap[4] = { 0, 4, 1, 5 };
-                if (i == sideMap[f1] || i == sideMap[f2]) {
-                    faceModel = glm::rotate(faceModel, glm::radians(angle1), glm::vec3(0.0f, 1.0f, 0.0f));
+                int f1 = sideMap[sidePair1];
+                int f2 = sideMap[(sidePair1 + 1) % 4];
+
+                if (i == f1 || i == f2) {
+                    // 선택된 두 면 사이의 공유 모서리 좌표 및 회전축 정의
+                    glm::vec3 edgePivot(0.0f);
+                    glm::vec3 rotAxis(0.0f, 1.0f, 0.0f);
+
+                    if (sidePair1 == 0)      edgePivot = glm::vec3(0.5f, 0.0f, 0.5f);   // +Z 와 +X 사이 모서리
+                    else if (sidePair1 == 1) edgePivot = glm::vec3(0.5f, 0.0f, -0.5f);  // +X 와 -Z 사이 모서리
+                    else if (sidePair1 == 2) edgePivot = glm::vec3(-0.5f, 0.0f, -0.5f); // -Z 와 -X 사이 모서리
+                    else if (sidePair1 == 3) edgePivot = glm::vec3(-0.5f, 0.0f, 0.5f);  // -X 와 +Z 사이 모서리
+
+                    // 공유 모서리를 피벗축으로 변환 및 회전 적용
+                    faceModel = glm::translate(faceModel, edgePivot);
+                    faceModel = glm::rotate(faceModel, glm::radians(angle1), rotAxis);
+                    faceModel = glm::translate(faceModel, -edgePivot);
                 }
             }
 
