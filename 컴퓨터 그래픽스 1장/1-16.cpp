@@ -14,15 +14,12 @@ GLuint cubevao, cubevbo[2];
 GLuint pyramidvao, pyramidvbo[2];
 GLuint axisvao, axisvbo[2];
 
-// 기본 위치 및 회전 상태
 float xPos = 0.0f, yPos = 0.0f, zPos = 0.0f;
 bool isDepthTest = true;
-bool isPyramidMode = false; // false: 정육면체, true: 피라미드
+bool isPyramidMode = false;
 
-// Y축 자전
 bool rotateY = false;
 float yAngle = 0.0f;
-
 
 bool animT = false; float angleT = 0.0f;
 bool animF = false; float angleF = 0.0f; float dirF = 1.0f;
@@ -34,11 +31,9 @@ bool anim2 = false; float angle2 = 0.0f; int sidePair2 = 0;
 bool anim4 = false; float angle4 = 0.0f;
 bool anim5 = false; float angle5 = 0.0f;
 
-
-
 bool anim6 = false; float angle6 = 0.0f; float dir6 = 1.0f;
 bool anim7 = false; float angle7 = 0.0f; int sideIndex7 = 0; float dir7 = 1.0f;
-bool anim8 = false; float currAngle8 = 0.0f;  float targetAngle8 = 0.0f; int pair8 = 0;
+bool anim8 = false; float currAngle8 = 0.0f; float targetAngle8 = 0.0f; int pair8 = 0;
 bool anim9 = false; float angle9 = 0.0f; float dir9 = 1.0f;
 
 std::string filetobuf(const char* file) {
@@ -71,24 +66,17 @@ void InitShader() {
 }
 
 void InitBuffer() {
-
     GLfloat cubeShape[36][3] = {
-        // 앞면 (0)
         {-0.5f,-0.5f, 0.5f}, { 0.5f,-0.5f, 0.5f}, { 0.5f, 0.5f, 0.5f},
         { 0.5f, 0.5f, 0.5f}, {-0.5f, 0.5f, 0.5f}, {-0.5f,-0.5f, 0.5f},
-        // 뒷면 (1)
         {-0.5f,-0.5f,-0.5f}, {-0.5f, 0.5f,-0.5f}, { 0.5f, 0.5f,-0.5f},
         { 0.5f, 0.5f,-0.5f}, { 0.5f,-0.5f,-0.5f}, {-0.5f,-0.5f,-0.5f},
-        // 윗면 (2)
         {-0.5f, 0.5f,-0.5f}, {-0.5f, 0.5f, 0.5f}, { 0.5f, 0.5f, 0.5f},
         { 0.5f, 0.5f, 0.5f}, { 0.5f, 0.5f,-0.5f}, {-0.5f, 0.5f,-0.5f},
-        // 밑면 (3)
         {-0.5f,-0.5f,-0.5f}, { 0.5f,-0.5f,-0.5f}, { 0.5f,-0.5f, 0.5f},
         { 0.5f,-0.5f, 0.5f}, {-0.5f,-0.5f, 0.5f}, {-0.5f,-0.5f,-0.5f},
-        // 오른면 (4)
         { 0.5f,-0.5f,-0.5f}, { 0.5f, 0.5f,-0.5f}, { 0.5f, 0.5f, 0.5f},
         { 0.5f, 0.5f, 0.5f}, { 0.5f,-0.5f, 0.5f}, { 0.5f,-0.5f,-0.5f},
-        // 왼면 (5)
         {-0.5f,-0.5f,-0.5f}, {-0.5f,-0.5f, 0.5f}, {-0.5f, 0.5f, 0.5f},
         {-0.5f, 0.5f, 0.5f}, {-0.5f, 0.5f,-0.5f}, {-0.5f,-0.5f,-0.5f}
     };
@@ -96,33 +84,27 @@ void InitBuffer() {
     GLfloat cubeColors[36][3];
     for (int i = 0; i < 36; i++) {
         int face = i / 6;
-        if (face == 0) { cubeColors[i][0] = 1.0f; cubeColors[i][1] = 0.0f; cubeColors[i][2] = 0.0f; } // 빨강
-        else if (face == 1) { cubeColors[i][0] = 0.0f; cubeColors[i][1] = 1.0f; cubeColors[i][2] = 0.0f; } // 초록
-        else if (face == 2) { cubeColors[i][0] = 0.0f; cubeColors[i][1] = 0.0f; cubeColors[i][2] = 1.0f; } // 파랑
-        else if (face == 3) { cubeColors[i][0] = 1.0f; cubeColors[i][1] = 1.0f; cubeColors[i][2] = 0.0f; } // 노랑
-        else if (face == 4) { cubeColors[i][0] = 1.0f; cubeColors[i][1] = 0.0f; cubeColors[i][2] = 1.0f; } // 자홍
-        else { cubeColors[i][0] = 0.0f; cubeColors[i][1] = 1.0f; cubeColors[i][2] = 1.0f; } // 청록
+        if (face == 0) { cubeColors[i][0] = 1.0f; cubeColors[i][1] = 0.0f; cubeColors[i][2] = 0.0f; }
+        else if (face == 1) { cubeColors[i][0] = 0.0f; cubeColors[i][1] = 1.0f; cubeColors[i][2] = 0.0f; }
+        else if (face == 2) { cubeColors[i][0] = 0.0f; cubeColors[i][1] = 0.0f; cubeColors[i][2] = 1.0f; }
+        else if (face == 3) { cubeColors[i][0] = 1.0f; cubeColors[i][1] = 1.0f; cubeColors[i][2] = 0.0f; }
+        else if (face == 4) { cubeColors[i][0] = 1.0f; cubeColors[i][1] = 0.0f; cubeColors[i][2] = 1.0f; }
+        else { cubeColors[i][0] = 0.0f; cubeColors[i][1] = 1.0f; cubeColors[i][2] = 1.0f; }
     }
 
-
     GLfloat pyramid[18][3] = {
-        // 아랫면 (0)
         {-0.5f,-0.5f,-0.5f}, { 0.5f,-0.5f,-0.5f}, { 0.5f,-0.5f, 0.5f},
         { 0.5f,-0.5f, 0.5f}, {-0.5f,-0.5f, 0.5f}, {-0.5f,-0.5f,-0.5f},
-        // 앞면 (1)
         { 0.5f, -0.5f, 0.5f}, {-0.5f, -0.5f, 0.5f}, { 0.0f, 0.5f, 0.0f},
-        // 오른면 (2)
         { 0.5f, -0.5f, -0.5f}, { 0.5f, -0.5f, 0.5f}, { 0.0f, 0.5f, 0.0f},
-        // 뒷면 (3)
         {-0.5f, -0.5f, -0.5f}, { 0.5f, -0.5f, -0.5f}, { 0.0f, 0.5f, 0.0f},
-        // 왼면 (4)
         {-0.5f, -0.5f, 0.5f}, {-0.5f, -0.5f, -0.5f}, { 0.0f, 0.5f, 0.0f}
     };
 
     GLfloat pyramidColors[18][3];
     for (int i = 0; i < 18; i++) {
         if (i < 6) {
-            pyramidColors[i][0] = 0.5f; pyramidColors[i][1] = 0.5f; pyramidColors[i][2] = 0.5f; // 회색
+            pyramidColors[i][0] = 0.5f; pyramidColors[i][1] = 0.5f; pyramidColors[i][2] = 0.5f;
         }
         else {
             int sideFace = (i - 6) / 3;
@@ -145,7 +127,6 @@ void InitBuffer() {
         {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}
     };
 
-    // 정육면체 VBO
     glGenVertexArrays(1, &cubevao);
     glBindVertexArray(cubevao);
     glGenBuffers(2, cubevbo);
@@ -160,7 +141,6 @@ void InitBuffer() {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(1);
 
-    // 피라미드 VBO
     glGenVertexArrays(1, &pyramidvao);
     glBindVertexArray(pyramidvao);
     glGenBuffers(2, pyramidvbo);
@@ -175,7 +155,6 @@ void InitBuffer() {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(1);
 
-    // 축 VBO
     glGenVertexArrays(1, &axisvao);
     glBindVertexArray(axisvao);
     glGenBuffers(2, axisvbo);
@@ -217,22 +196,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         glfwSetWindowShouldClose(window, GLFW_TRUE);
         break;
 
-    case GLFW_KEY_H:
-        isDepthTest = !isDepthTest;
-        break;
-
-    case GLFW_KEY_P:
-        isPyramidMode = !isPyramidMode;
-        break;
-
-    case GLFW_KEY_Y:
-        rotateY = !rotateY;
-        break;
-
-    case GLFW_KEY_R:
-        ResetAllAnimations();
-        isPyramidMode = false;
-        break;
+    case GLFW_KEY_H: isDepthTest = !isDepthTest; break;
+    case GLFW_KEY_P: isPyramidMode = !isPyramidMode; break;
+    case GLFW_KEY_Y: rotateY = !rotateY; break;
+    case GLFW_KEY_R: ResetAllAnimations(); isPyramidMode = false; break;
 
     case GLFW_KEY_T:
         isPyramidMode = false;
@@ -283,37 +250,29 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         anim5 = !anim5;
         break;
 
-
-
     case GLFW_KEY_6:
         isPyramidMode = true;
-
         anim8 = false; currAngle8 = 0.0f; targetAngle8 = 0.0f;
         anim7 = false; angle7 = 0.0f; sideIndex7 = 0; dir7 = 1.0f;
         anim9 = false; angle9 = 0.0f; dir9 = 1.0f;
-
         anim6 = !anim6;
         if (!anim6) { angle6 = 0.0f; dir6 = 1.0f; }
         break;
 
     case GLFW_KEY_7:
         isPyramidMode = true;
-
         anim8 = false; currAngle8 = 0.0f; targetAngle8 = 0.0f;
         anim6 = false; angle6 = 0.0f; dir6 = 1.0f;
         anim9 = false; angle9 = 0.0f; dir9 = 1.0f;
-
         anim7 = !anim7;
         if (!anim7) { angle7 = 0.0f; sideIndex7 = 0; dir7 = 1.0f; }
         break;
 
     case GLFW_KEY_8:
         isPyramidMode = true;
-
         anim6 = false; angle6 = 0.0f; dir6 = 1.0f;
         anim7 = false; angle7 = 0.0f; sideIndex7 = 0; dir7 = 1.0f;
         anim9 = false; angle9 = 0.0f; dir9 = 1.0f;
-
         if (!anim8) {
             anim8 = true;
             pair8 = rand() % 2;
@@ -323,64 +282,51 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
     case GLFW_KEY_9:
         isPyramidMode = true;
-
         anim8 = false; currAngle8 = 0.0f; targetAngle8 = 0.0f;
         anim6 = false; angle6 = 0.0f; dir6 = 1.0f;
         anim7 = false; angle7 = 0.0f; sideIndex7 = 0; dir7 = 1.0f;
-
         anim9 = !anim9;
         if (!anim9) { angle9 = 0.0f; dir9 = 1.0f; }
         break;
     }
 }
 
-void UpdateAnimations() {
+void UpdateAnimations(float deltaTime) {
+    float speedMultiplier = deltaTime * 60.0f;
+
     if (rotateY) {
-        yAngle += 1.0f;
+        yAngle += 1.0f * speedMultiplier;
         if (yAngle >= 360.0f) yAngle -= 360.0f;
     }
 
-    // 육면체 애니메이션 업데이트
+    if (animT) { angleT += 1.2f * speedMultiplier; if (angleT >= 360.0f) angleT -= 360.0f; }
 
-    // T키
-    if (animT) { angleT += 2.0f; if (angleT >= 360.0f) angleT -= 360.0f; }
-
-    // F키
     if (animF) {
-        angleF += dirF * 2.0f;
+        angleF += dirF * 1.2f * speedMultiplier;
         if (angleF >= 120.0f) { angleF = 120.0f; dirF = -1.0f; }
         else if (angleF <= 0.0f && dirF < 0.0f) { angleF = 0.0f; animF = false; }
     }
 
-    // S키
-    if (animS) { angleS += 2.0f; if (angleS >= 360.0f) angleS -= 360.0f; }
+    if (animS) { angleS += 1.2f * speedMultiplier; if (angleS >= 360.0f) angleS -= 360.0f; }
 
-    // B키
     if (animB) {
-        scaleB += dirB * 0.02f;
+        scaleB += dirB * 0.02f * speedMultiplier;
         if (scaleB <= 0.0f) { scaleB = 0.0f; dirB = 1.0f; }
         else if (scaleB >= 1.0f && dirB > 0.0f) { scaleB = 1.0f; animB = false; }
     }
 
-    // 1키
-    if (anim1) { angle1 += 2.0f; if (angle1 >= 360.0f) angle1 -= 360.0f; }
+    if (anim1) { angle1 += 1.2f * speedMultiplier; if (angle1 >= 360.0f) angle1 -= 360.0f; }
 
-    // 2키
     if (anim2) {
-        angle2 += 3.0f;
-        if (angle2 >= 270.0f) { angle2 = 270.0f; anim2 = false; }
+        angle2 += 1.5f * speedMultiplier;
+        if (angle2 >= 90.0f) { angle2 = 90.0f; anim2 = false; }
     }
 
-    // 4키
-    if (anim4) { angle4 += 1.5f; if (angle4 >= 360.0f) angle4 -= 360.0f; }
+    if (anim4) { angle4 += 1.2f * speedMultiplier; if (angle4 >= 360.0f) angle4 -= 360.0f; }
+    if (anim5) { angle5 += 1.2f * speedMultiplier; if (angle5 >= 360.0f) angle5 -= 360.0f; }
 
-    // 5키
-    if (anim5) { angle5 += 1.5f; if (angle5 >= 360.0f) angle5 -= 360.0f; }
-
-
-    // 6키
     if (anim6) {
-        angle6 += dir6 * 2.0f;
+        angle6 += dir6 * 1.2f * speedMultiplier;
         if (angle6 >= 180.0f) {
             angle6 = 180.0f;
             dir6 = -1.0f;
@@ -392,9 +338,8 @@ void UpdateAnimations() {
         }
     }
 
-    // 7키
     if (anim7) {
-        angle7 += dir7 * 2.0f;
+        angle7 += dir7 * 1.2f * speedMultiplier;
         if (angle7 >= 90.0f) {
             angle7 = 90.0f;
             dir7 = -1.0f;
@@ -413,18 +358,16 @@ void UpdateAnimations() {
         }
     }
 
-    // 8키
     if (anim8) {
-        currAngle8 += 2.0f;
+        currAngle8 += 1.3f * speedMultiplier;
         if (currAngle8 >= targetAngle8) {
             currAngle8 = targetAngle8;
             anim8 = false;
         }
     }
 
-    // 9키
     if (anim9) {
-        angle9 += dir9 * 1.2f;
+        angle9 += dir9 * 1.1f * speedMultiplier;
         if (angle9 >= 60.0f) {
             angle9 = 60.0f;
             dir9 = -1.0f;
@@ -437,8 +380,8 @@ void UpdateAnimations() {
     }
 }
 
-void drawScene(GLFWwindow* window) {
-    UpdateAnimations();
+void drawScene(GLFWwindow* window, float deltaTime) {
+    UpdateAnimations(deltaTime);
 
     if (isDepthTest) glEnable(GL_DEPTH_TEST);
     else glDisable(GL_DEPTH_TEST);
@@ -457,7 +400,6 @@ void drawScene(GLFWwindow* window) {
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
     GLuint transformLoc = glGetUniformLocation(shaderProgramID, "transform");
 
-    // 1. 고정 축 렌더링
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glm::mat4 axisMVP = projection * view * glm::mat4(1.0f);
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(axisMVP));
@@ -465,26 +407,22 @@ void drawScene(GLFWwindow* window) {
     glLineWidth(1.5f);
     glDrawArrays(GL_LINES, 0, 6);
 
-    // 2. 기본 모델 변환 (기울어짐 + 자전)
     glm::mat4 baseModel = glm::mat4(1.0f);
     baseModel = glm::translate(baseModel, glm::vec3(xPos, yPos, zPos));
     baseModel = glm::rotate(baseModel, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     baseModel = glm::rotate(baseModel, glm::radians(yAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 
     if (!isPyramidMode) {
-        // --- 정육면체 렌더링 ---
         glBindVertexArray(cubevao);
         for (int i = 0; i < 6; i++) {
             glm::mat4 faceModel = baseModel;
 
-            // [5번 키 수정] 앞(0), 뒤(1), 위(2), 아래(3) 면 전체를 X축 기준으로 궤도 회전시킴
             if (anim5 && (i == 0 || i == 1 || i == 2 || i == 3)) {
                 faceModel = glm::rotate(faceModel, glm::radians(angle5), glm::vec3(1.0f, 0.0f, 0.0f));
             }
             if (anim4 && (i == 0 || i == 1 || i == 4 || i == 5)) {
                 faceModel = glm::rotate(faceModel, glm::radians(angle4), glm::vec3(0.0f, 1.0f, 0.0f));
             }
-
 
             if (anim1) {
                 int f1 = sidePair1, f2 = (sidePair1 + 1) % 4;
@@ -494,13 +432,12 @@ void drawScene(GLFWwindow* window) {
                 }
             }
 
-
             if (anim2 || angle2 > 0.0f) {
                 int sideMap[4] = { 0, 4, 1, 5 };
                 int f1 = sideMap[sidePair2];
                 int f2 = sideMap[(sidePair2 + 1) % 4];
-                if (i == f1) faceModel = glm::rotate(faceModel, glm::radians(-angle2), glm::vec3(0.0f, 1.0f, 0.0f));
-                else if (i == f2) faceModel = glm::rotate(faceModel, glm::radians(angle2), glm::vec3(0.0f, 1.0f, 0.0f));
+                if (i == f1) faceModel = glm::rotate(faceModel, glm::radians(angle2), glm::vec3(0.0f, 1.0f, 0.0f));
+                else if (i == f2) faceModel = glm::rotate(faceModel, glm::radians(-angle2), glm::vec3(0.0f, 1.0f, 0.0f));
             }
             if (i == 2 && animT) {
                 faceModel = glm::translate(faceModel, glm::vec3(0.0f, 0.5f, 0.0f));
@@ -529,27 +466,24 @@ void drawScene(GLFWwindow* window) {
         }
     }
     else {
-
         glBindVertexArray(pyramidvao);
-
 
         glm::mat4 baseMVP = projection * view * baseModel;
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(baseMVP));
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-
         glm::vec3 edgePos[4] = {
-            glm::vec3(0.0f, -0.5f, 0.5f),   // 앞
-            glm::vec3(0.5f, -0.5f, 0.0f),   // 오른
-            glm::vec3(0.0f, -0.5f, -0.5f),  // 뒤
-            glm::vec3(-0.5f, -0.5f, 0.0f)   // 왼
+            glm::vec3(0.0f, -0.5f, 0.5f),
+            glm::vec3(0.5f, -0.5f, 0.0f),
+            glm::vec3(0.0f, -0.5f, -0.5f),
+            glm::vec3(-0.5f, -0.5f, 0.0f)
         };
 
         glm::vec3 rotAxis[4] = {
-            glm::vec3(1.0f, 0.0f, 0.0f),   // 앞: X축 회전
-            glm::vec3(0.0f, 0.0f, -1.0f),  // 오른: Z축 회전
-            glm::vec3(-1.0f, 0.0f, 0.0f),  // 뒤: -X축 회전
-            glm::vec3(0.0f, 0.0f, 1.0f)    // 왼: -Z축 회전
+            glm::vec3(1.0f, 0.0f, 0.0f),
+            glm::vec3(0.0f, 0.0f, -1.0f),
+            glm::vec3(-1.0f, 0.0f, 0.0f),
+            glm::vec3(0.0f, 0.0f, 1.0f)
         };
 
         for (int i = 0; i < 4; i++) {
@@ -613,8 +547,16 @@ int main() {
 
     glfwSetKeyCallback(window, key_callback);
 
+    float lastTime = static_cast<float>(glfwGetTime());
+
     while (!glfwWindowShouldClose(window)) {
-        drawScene(window);
+        float currentTime = static_cast<float>(glfwGetTime());
+        float deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        if (deltaTime > 0.1f) deltaTime = 0.1f;
+
+        drawScene(window, deltaTime);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
