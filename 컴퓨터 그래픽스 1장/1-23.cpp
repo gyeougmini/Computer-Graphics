@@ -14,24 +14,25 @@
 
 GLuint shaderProgramID;
 GLuint cubeVAO, cubeVBO[2];
+GLuint stageVAO, stageVBO[2];
 
-// --- 무대 문 상태 변수 (시작 시 내부가 바로 보이도록 1.0f로 설정) ---
+// --- 무대 문 상태 변수 ---
 bool doorOpen = true;        // o/O키로 열고 닫기
 float doorProgress = 1.0f;   // 1.0 (열림) ~ 0.0 (닫힘)
 
 // --- 로봇 상태 변수 ---
 glm::vec3 robotPos = glm::vec3(0.0f, -1.25f, 0.0f);
-float robotRotY = 180.0f; // 바라보는 방향
-float moveSpeed = 1.5f;   // 걷기 속도
-float limbAngle = 0.0f;   // 팔/다리 흔들림 각도
+float robotRotY = 180.0f;
+float moveSpeed = 1.5f;
+float limbAngle = 0.0f;
 float limbDir = 1.0f;
 
 // 점프 변수
 bool isJumping = false;
 float jumpVel = 0.0f;
-float currentY = -1.25f; // 기본 바닥 Y 높이
+float currentY = -1.25f;
 
-// 장애물 3개 구조체 및 위치 데이터
+// 장애물 3개
 struct Obstacle {
     glm::vec3 pos;
     glm::vec3 size;
@@ -39,13 +40,13 @@ struct Obstacle {
 };
 Obstacle obstacles[3];
 
-// --- 카메라 조작 변수 (내부 입체 시야 확보를 위한 초기 시점) ---
+// --- 카메라 조작 변수 ---
 glm::vec3 cameraPos = glm::vec3(0.0f, 1.5f, 5.5f);
 bool animCamY = false;
 float camYDir = 1.0f;
 float camYAngle = 0.0f;
 
-// 단위 육면체 버텍스 데이터 (-0.5 ~ 0.5)
+// 일반 큐브 버텍스 데이터 (-0.5 ~ 0.5) - 로봇 및 장애물용 (겉면이 Front)
 float cubeVertices[] = {
     // Front
     -0.5f, -0.5f,  0.5f,  0.5f, -0.5f,  0.5f,  0.5f,  0.5f,  0.5f,
@@ -65,6 +66,29 @@ float cubeVertices[] = {
          // Left
          -0.5f, -0.5f, -0.5f, -0.5f, -0.5f,  0.5f, -0.5f,  0.5f,  0.5f,
          -0.5f,  0.5f,  0.5f, -0.5f,  0.5f, -0.5f, -0.5f, -0.5f, -0.5f
+};
+
+// 무대 내부 5개 면 버텍스 데이터 (안쪽이 Front가 되도록 CCW 정의)
+float stageVertices[] = {
+    // 0. 바닥 (Floor: Y = -2.0, 위쪽 +Y를 바라봄)
+    -2.0f, -2.0f, -2.0f,   2.0f, -2.0f,  2.0f,   2.0f, -2.0f, -2.0f,
+    -2.0f, -2.0f, -2.0f,  -2.0f, -2.0f,  2.0f,   2.0f, -2.0f,  2.0f,
+
+    // 1. 천장 (Ceiling: Y = 2.0, 아래쪽 -Y를 바라봄)
+    -2.0f,  2.0f, -2.0f,   2.0f,  2.0f, -2.0f,   2.0f,  2.0f,  2.0f,
+    -2.0f,  2.0f, -2.0f,   2.0f,  2.0f,  2.0f,  -2.0f,  2.0f,  2.0f,
+
+    // 2. 좌측 벽 (Left Wall: X = -2.0, 오른쪽 +X를 바라봄)
+    -2.0f, -2.0f, -2.0f,  -2.0f,  2.0f, -2.0f,  -2.0f,  2.0f,  2.0f,
+    -2.0f, -2.0f, -2.0f,  -2.0f,  2.0f,  2.0f,  -2.0f, -2.0f,  2.0f,
+
+    // 3. 우측 벽 (Right Wall: X = 2.0, 왼쪽 -X를 바라봄)
+     2.0f, -2.0f, -2.0f,   2.0f, -2.0f,  2.0f,   2.0f,  2.0f,  2.0f,
+     2.0f, -2.0f, -2.0f,   2.0f,  2.0f,  2.0f,   2.0f,  2.0f, -2.0f,
+
+     // 4. 후면 벽 (Back Wall: Z = -2.0, 앞쪽 +Z를 바라봄)
+     -2.0f, -2.0f, -2.0f,   2.0f, -2.0f, -2.0f,   2.0f,  2.0f, -2.0f,
+     -2.0f, -2.0f, -2.0f,   2.0f,  2.0f, -2.0f,  -2.0f,  2.0f, -2.0f
 };
 
 std::string filetobuf(const char* file) {
@@ -97,6 +121,7 @@ void InitShader() {
 }
 
 void InitBuffer() {
+    // 1. 일반 큐브 (로봇, 장애물용)
     glGenVertexArrays(1, &cubeVAO);
     glBindVertexArray(cubeVAO);
     glGenBuffers(2, cubeVBO);
@@ -110,21 +135,34 @@ void InitBuffer() {
     glBufferData(GL_ARRAY_BUFFER, 36 * 3 * sizeof(float), NULL, GL_DYNAMIC_DRAW);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glEnableVertexAttribArray(1);
+
+    // 2. 무대 컬링 전용 VAO
+    glGenVertexArrays(1, &stageVAO);
+    glBindVertexArray(stageVAO);
+    glGenBuffers(2, stageVBO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, stageVBO[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(stageVertices), stageVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, stageVBO[1]);
+    glBufferData(GL_ARRAY_BUFFER, 30 * 3 * sizeof(float), NULL, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(1);
 }
 
-// 장애물 초기화 (로봇 시작 위치와 겹침 방지 로직 포함)
 void initObstacles() {
     for (int i = 0; i < 3; ++i) {
         float ox, oz;
-        float safeDistance = 0.8f; // 로봇과의 최소 안전거리
+        float safeDistance = 0.8f;
 
-        // 로봇 시작점 (0,0)과 겹치지 않는 좌표 추출
         do {
             ox = ((rand() % 100) / 50.0f - 1.0f) * 1.2f;
             oz = ((rand() % 100) / 50.0f - 1.0f) * 1.2f;
         } while (sqrt(ox * ox + oz * oz) < safeDistance);
 
-        float sy = 0.3f + (rand() % 3) * 0.15f; // 장애물 높이
+        float sy = 0.3f + (rand() % 3) * 0.15f;
 
         obstacles[i].size = glm::vec3(0.6f, sy, 0.6f);
         obstacles[i].pos = glm::vec3(ox, -2.0f + sy * 0.5f, oz);
@@ -150,7 +188,6 @@ void resetAll() {
     initObstacles();
 }
 
-// AABB 충돌 체크 함수
 bool checkObstacleCollision(glm::vec3 targetPos, int& hitIndex) {
     float robotRadius = 0.25f;
     hitIndex = -1;
@@ -176,20 +213,17 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
     switch (key) {
     case GLFW_KEY_Q: glfwSetWindowShouldClose(window, GLFW_TRUE); break;
-    case GLFW_KEY_O: doorOpen = !doorOpen; break; // o/O: 문 슬라이딩 오픈[cite: 46]
-    case GLFW_KEY_I: resetAll(); break;          // i: 리셋[cite: 46]
+    case GLFW_KEY_O: doorOpen = !doorOpen; break;
+    case GLFW_KEY_I: resetAll(); break;
 
-        // w/a/s/d: 이동 방향 변경[cite: 46]
-    case GLFW_KEY_W: robotRotY = 180.0f; break; // 화면 안쪽 (-Z)
-    case GLFW_KEY_S: robotRotY = 0.0f;   break; // 화면 앞쪽 (+Z)
-    case GLFW_KEY_A: robotRotY = 270.0f; break; // 왼쪽 (-X)
-    case GLFW_KEY_D: robotRotY = 90.0f;  break; // 오른쪽 (+X)
+    case GLFW_KEY_W: robotRotY = 180.0f; break;
+    case GLFW_KEY_S: robotRotY = 0.0f;   break;
+    case GLFW_KEY_A: robotRotY = 270.0f; break;
+    case GLFW_KEY_D: robotRotY = 90.0f;  break;
 
-        // +/-: 속도 조절[cite: 46]
     case GLFW_KEY_EQUAL: moveSpeed = std::min(4.0f, moveSpeed + 0.5f); break;
     case GLFW_KEY_MINUS: moveSpeed = std::max(0.5f, moveSpeed - 0.5f); break;
 
-        // j: 점프[cite: 46]
     case GLFW_KEY_J:
         if (!isJumping) {
             isJumping = true;
@@ -197,7 +231,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         }
         break;
 
-        // 카메라 조작 (z/Z, x/X, y/Y)[cite: 46]
     case GLFW_KEY_Z: cameraPos.z += isShift ? -0.2f : 0.2f; break;
     case GLFW_KEY_X: cameraPos.x += isShift ? -0.2f : 0.2f; break;
     case GLFW_KEY_Y:
@@ -208,7 +241,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 void update(float deltaTime) {
-    // 1. 문 슬라이딩 애니메이션[cite: 46]
     if (doorOpen && doorProgress < 1.0f) {
         doorProgress += deltaTime * 1.5f;
         if (doorProgress > 1.0f) doorProgress = 1.0f;
@@ -218,52 +250,46 @@ void update(float deltaTime) {
         if (doorProgress < 0.0f) doorProgress = 0.0f;
     }
 
-    // 2. 카메라 Y축 공전[cite: 46]
     if (animCamY) {
         camYAngle += camYDir * 45.0f * deltaTime;
     }
 
-    // 3. 로봇 자동 직진 및 충돌 체크[cite: 46]
     float rad = glm::radians(robotRotY);
     glm::vec3 dir = glm::vec3(sin(rad), 0.0f, cos(rad));
     glm::vec3 nextPos = robotPos + dir * moveSpeed * deltaTime;
 
-    // 벽면 경계 충돌 (무대 벽 -1.7 ~ 1.7)[cite: 46]
     bool hitWall = (nextPos.x < -1.7f || nextPos.x > 1.7f || nextPos.z < -1.7f || nextPos.z > 1.7f);
 
     int hitObsIdx = -1;
     bool hitObs = checkObstacleCollision(nextPos, hitObsIdx);
 
-    // 장애물 탑 높이 계산
-    float targetHeight = -1.25f; // 기본 바닥 높이
+    float targetHeight = -1.25f;
     if (hitObsIdx != -1) {
         targetHeight = -2.0f + obstacles[hitObsIdx].size.y + 0.75f;
     }
 
     if (hitWall) {
-        robotRotY = fmod(robotRotY + 180.0f, 360.0f); // 벽 부딪힘 시 반대 방향 회전[cite: 46]
+        robotRotY = fmod(robotRotY + 180.0f, 360.0f);
     }
     else if (hitObs) {
-        // 점프하여 장애물 위 높이보다 충분히 높으면 장애물 위로 이동 허용[cite: 46]
         if (robotPos.y >= targetHeight - 0.1f) {
             robotPos.x = nextPos.x;
             robotPos.z = nextPos.z;
             currentY = targetHeight;
         }
         else {
-            robotRotY = fmod(robotRotY + 180.0f, 360.0f); // 아래에서 걸리면 회전[cite: 46]
+            robotRotY = fmod(robotRotY + 180.0f, 360.0f);
         }
     }
     else {
         robotPos.x = nextPos.x;
         robotPos.z = nextPos.z;
-        currentY = -1.25f; // 장애물에서 내려옴
+        currentY = -1.25f;
     }
 
-    // 4. 점프 및 물리 연산[cite: 46]
     if (isJumping) {
         robotPos.y += jumpVel * deltaTime;
-        jumpVel -= 9.8f * deltaTime; // 중력 적용
+        jumpVel -= 9.8f * deltaTime;
 
         if (robotPos.y <= currentY) {
             robotPos.y = currentY;
@@ -272,12 +298,10 @@ void update(float deltaTime) {
         }
     }
     else {
-        // 부드러운 착지 높이 보정
         robotPos.y += (currentY - robotPos.y) * 10.0f * deltaTime;
     }
 
-    // 5. 팔/다리 흔들림 애니메이션 (속도에 비례한 회전 각도)[cite: 46]
-    float maxSwing = 15.0f * moveSpeed; // 속도가 빠르면 각도가 늘어남[cite: 46]
+    float maxSwing = 15.0f * moveSpeed;
     limbAngle += limbDir * moveSpeed * 120.0f * deltaTime;
     if (limbAngle > maxSwing) { limbAngle = maxSwing; limbDir = -1.0f; }
     if (limbAngle < -maxSwing) { limbAngle = -maxSwing; limbDir = 1.0f; }
@@ -301,58 +325,71 @@ void drawCube(const glm::mat4& model, const glm::mat4& viewProj, glm::vec3 color
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-// 계층 구조 로봇 렌더링 함수[cite: 46]
+// 무대 5개 면 개별 렌더링 함수
+void drawStageWallFace(int faceIndex, const glm::mat4& viewProj, glm::vec3 color, GLuint transformLoc) {
+    glm::mat4 mvp = viewProj * glm::mat4(1.0f);
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+
+    std::vector<float> colorBuffer(6 * 3);
+    for (int i = 0; i < 6; ++i) {
+        colorBuffer[i * 3 + 0] = color.r;
+        colorBuffer[i * 3 + 1] = color.g;
+        colorBuffer[i * 3 + 2] = color.b;
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, stageVBO[1]);
+    glBufferSubData(GL_ARRAY_BUFFER, faceIndex * 6 * 3 * sizeof(float), colorBuffer.size() * sizeof(float), colorBuffer.data());
+
+    glBindVertexArray(stageVAO);
+    glDrawArrays(GL_TRIANGLES, faceIndex * 6, 6);
+}
+
 void drawRobot(const glm::mat4& viewProj, GLuint transformLoc) {
     glm::mat4 robotRoot = glm::mat4(1.0f);
     robotRoot = glm::translate(robotRoot, robotPos);
     robotRoot = glm::rotate(robotRoot, glm::radians(robotRotY), glm::vec3(0.0f, 1.0f, 0.0f));
 
-    // 색상 정의 (구분을 위한 전후/좌우 다른 색상)[cite: 46]
-    glm::vec3 cBody = glm::vec3(0.2f, 0.4f, 0.8f); // 몸통 (파랑)
-    glm::vec3 cHead = glm::vec3(0.9f, 0.8f, 0.6f); // 머리
-    glm::vec3 cNose = glm::vec3(0.9f, 0.2f, 0.2f); // 코 (빨강, 앞면 구분)[cite: 46]
-    glm::vec3 cArmLeft = glm::vec3(0.9f, 0.3f, 0.3f); // 왼팔 (빨강)[cite: 46]
-    glm::vec3 cArmRight = glm::vec3(0.3f, 0.8f, 0.3f); // 오른팔 (초록)[cite: 46]
-    glm::vec3 cLegLeft = glm::vec3(0.8f, 0.2f, 0.8f); // 왼다리 (보라)[cite: 46]
-    glm::vec3 cLegRight = glm::vec3(0.8f, 0.8f, 0.2f); // 오른다리 (노랑)[cite: 46]
+    glm::vec3 cBody = glm::vec3(0.2f, 0.4f, 0.8f);
+    glm::vec3 cHead = glm::vec3(0.9f, 0.8f, 0.6f);
+    glm::vec3 cNose = glm::vec3(0.9f, 0.2f, 0.2f);
+    glm::vec3 cArmLeft = glm::vec3(0.9f, 0.3f, 0.3f);
+    glm::vec3 cArmRight = glm::vec3(0.3f, 0.8f, 0.3f);
+    glm::vec3 cLegLeft = glm::vec3(0.8f, 0.2f, 0.8f);
+    glm::vec3 cLegRight = glm::vec3(0.8f, 0.8f, 0.2f);
 
-    // 1. 몸통 (Torso)[cite: 46]
+    // 1. 몸통
     glm::mat4 torsoModel = glm::scale(robotRoot, glm::vec3(0.5f, 0.7f, 0.3f));
     drawCube(torsoModel, viewProj, cBody, transformLoc);
 
-    // 2. 머리 (Head) & 코 (Nose)[cite: 46]
+    // 2. 머리 & 코
     glm::mat4 headModel = glm::translate(robotRoot, glm::vec3(0.0f, 0.5f, 0.0f));
     glm::mat4 headDraw = glm::scale(headModel, glm::vec3(0.35f, 0.35f, 0.35f));
     drawCube(headDraw, viewProj, cHead, transformLoc);
 
     glm::mat4 noseModel = glm::translate(headModel, glm::vec3(0.0f, 0.0f, 0.2f));
     noseModel = glm::scale(noseModel, glm::vec3(0.08f, 0.08f, 0.15f));
-    drawCube(noseModel, viewProj, cNose, transformLoc); // 앞면 구분용 코[cite: 46]
+    drawCube(noseModel, viewProj, cNose, transformLoc);
 
-    // 3. 양팔 (Left & Right Arms) - 서로 반대 각도 흔들림[cite: 46]
-    // 왼팔
+    // 3. 양팔
     glm::mat4 leftArmModel = glm::translate(robotRoot, glm::vec3(-0.33f, 0.25f, 0.0f));
     leftArmModel = glm::rotate(leftArmModel, glm::radians(limbAngle), glm::vec3(1.0f, 0.0f, 0.0f));
     leftArmModel = glm::translate(leftArmModel, glm::vec3(0.0f, -0.25f, 0.0f));
     glm::mat4 leftArmDraw = glm::scale(leftArmModel, glm::vec3(0.12f, 0.5f, 0.12f));
     drawCube(leftArmDraw, viewProj, cArmLeft, transformLoc);
 
-    // 오른팔
     glm::mat4 rightArmModel = glm::translate(robotRoot, glm::vec3(0.33f, 0.25f, 0.0f));
     rightArmModel = glm::rotate(rightArmModel, glm::radians(-limbAngle), glm::vec3(1.0f, 0.0f, 0.0f));
     rightArmModel = glm::translate(rightArmModel, glm::vec3(0.0f, -0.25f, 0.0f));
     glm::mat4 rightArmDraw = glm::scale(rightArmModel, glm::vec3(0.12f, 0.5f, 0.12f));
     drawCube(rightArmDraw, viewProj, cArmRight, transformLoc);
 
-    // 4. 양다리 (Left & Right Legs) - 서로 반대 각도 흔들림[cite: 46]
-    // 왼다리
+    // 4. 양다리
     glm::mat4 leftLegModel = glm::translate(robotRoot, glm::vec3(-0.15f, -0.35f, 0.0f));
     leftLegModel = glm::rotate(leftLegModel, glm::radians(-limbAngle), glm::vec3(1.0f, 0.0f, 0.0f));
     leftLegModel = glm::translate(leftLegModel, glm::vec3(0.0f, -0.25f, 0.0f));
     glm::mat4 leftLegDraw = glm::scale(leftLegModel, glm::vec3(0.15f, 0.5f, 0.15f));
     drawCube(leftLegDraw, viewProj, cLegLeft, transformLoc);
 
-    // 오른다리
     glm::mat4 rightLegModel = glm::translate(robotRoot, glm::vec3(0.15f, -0.35f, 0.0f));
     rightLegModel = glm::rotate(rightLegModel, glm::radians(limbAngle), glm::vec3(1.0f, 0.0f, 0.0f));
     rightLegModel = glm::translate(rightLegModel, glm::vec3(0.0f, -0.25f, 0.0f));
@@ -364,8 +401,10 @@ void drawScene(GLFWwindow* window, float deltaTime) {
     update(deltaTime);
 
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE); // 내부가 항상 보이도록 면 컬링 활성화[cite: 46]
-    glCullFace(GL_BACK);
+
+    // --- 은면 제거 컬링 활성화 ---
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK); // 뒷면 자동 제거
 
     glClearColor(0.08f, 0.08f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -373,7 +412,6 @@ void drawScene(GLFWwindow* window, float deltaTime) {
     glUseProgram(shaderProgramID);
     GLuint transformLoc = glGetUniformLocation(shaderProgramID, "transform");
 
-    // 카메라 뷰/투영 계산
     glm::vec3 currentCamPos = cameraPos;
     if (animCamY) {
         float rad = glm::radians(camYAngle);
@@ -386,34 +424,20 @@ void drawScene(GLFWwindow* window, float deltaTime) {
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
     glm::mat4 viewProj = projection * view;
 
-    // --- 1. 5개 면 무대 벽면 그리기 (컬링 적용으로 카메라 회전 시에도 내부가 보임) ---[cite: 46]
+    // --- 1. 무대 5개 면 (바닥, 천장, 좌, 우, 후면) 렌더링 ---
     glm::vec3 cFloorStage = glm::vec3(0.4f, 0.6f, 0.4f); // 바닥 (초록)
-    glm::vec3 cWallLeft = glm::vec3(0.2f, 0.5f, 0.3f); // 좌
-    glm::vec3 cWallRight = glm::vec3(0.2f, 0.3f, 0.6f); // 우
-    glm::vec3 cWallTop = glm::vec3(0.3f, 0.3f, 0.3f); // 상
-    glm::vec3 cWallBack = glm::vec3(0.7f, 0.2f, 0.2f); // 후면
+    glm::vec3 cWallTop = glm::vec3(0.3f, 0.3f, 0.3f); // 상단 (회색)
+    glm::vec3 cWallLeft = glm::vec3(0.2f, 0.5f, 0.3f); // 좌측 (진녹색)
+    glm::vec3 cWallRight = glm::vec3(0.2f, 0.3f, 0.6f); // 우측 (파랑색)
+    glm::vec3 cWallBack = glm::vec3(0.7f, 0.2f, 0.2f); // 후면 (빨강색)
 
-    // 바닥
-    glm::mat4 mFloor = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f)), glm::vec3(4.0f, 0.05f, 4.0f));
-    drawCube(mFloor, viewProj, cFloorStage, transformLoc);
+    drawStageWallFace(0, viewProj, cFloorStage, transformLoc); // 0: 바닥
+    drawStageWallFace(1, viewProj, cWallTop, transformLoc); // 1: 천장
+    drawStageWallFace(2, viewProj, cWallLeft, transformLoc); // 2: 좌측
+    drawStageWallFace(3, viewProj, cWallRight, transformLoc); // 3: 우측
+    drawStageWallFace(4, viewProj, cWallBack, transformLoc); // 4: 후면
 
-    // 천장
-    glm::mat4 mTop = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f)), glm::vec3(4.0f, 0.05f, 4.0f));
-    drawCube(mTop, viewProj, cWallTop, transformLoc);
-
-    // 좌측 벽
-    glm::mat4 mLeft = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 0.0f, 0.0f)), glm::vec3(0.05f, 4.0f, 4.0f));
-    drawCube(mLeft, viewProj, cWallLeft, transformLoc);
-
-    // 우측 벽
-    glm::mat4 mRight = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f)), glm::vec3(0.05f, 4.0f, 4.0f));
-    drawCube(mRight, viewProj, cWallRight, transformLoc);
-
-    // 후면 벽
-    glm::mat4 mBack = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f)), glm::vec3(4.0f, 4.0f, 0.05f));
-    drawCube(mBack, viewProj, cWallBack, transformLoc);
-
-    // --- 2. 슬라이딩 전면 문 (O키로 위로 열림) ---[cite: 46]
+    // --- 2. 슬라이딩 전면 문 (O키) ---
     if (doorProgress < 1.0f) {
         float doorScaleY = 4.0f * (1.0f - doorProgress);
         float doorPosY = 2.0f - doorScaleY * 0.5f;
@@ -423,14 +447,14 @@ void drawScene(GLFWwindow* window, float deltaTime) {
         drawCube(mDoor, viewProj, glm::vec3(0.8f, 0.8f, 0.2f), transformLoc);
     }
 
-    // --- 3. 랜덤 장애물 3개 렌더링 ---[cite: 46]
+    // --- 3. 장애물 3개 ---
     for (int i = 0; i < 3; ++i) {
         glm::mat4 mObs = glm::translate(glm::mat4(1.0f), obstacles[i].pos);
         mObs = glm::scale(mObs, obstacles[i].size);
         drawCube(mObs, viewProj, obstacles[i].color, transformLoc);
     }
 
-    // --- 4. 걷는 로봇 렌더링 ---[cite: 46]
+    // --- 4. 걷는 사람 로봇 ---
     drawRobot(viewProj, transformLoc);
 
     glDisable(GL_CULL_FACE);
@@ -454,7 +478,7 @@ int main() {
     InitShader();
     InitBuffer();
 
-    initObstacles(); // 겹침 없는 안전한 장애물 무작위 배치
+    initObstacles();
 
     glfwSetKeyCallback(window, key_callback);
 
