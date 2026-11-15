@@ -17,7 +17,7 @@ bool isPerspective = true;        // p/P: 원근/직각 투영
 float cameraAngleY = 45.0f;       // 좌/우 방향키: 카메라 Y축 회전 각도
 float cameraRadius = 15.0f;       // +/-: 줌 인 / 줌 아웃 거리
 
-// 시점 관련 추가 변수 (실습 24)
+// 시점 관련 변수
 bool isFirstPerson = false;       // V/v: 1인칭/3인칭 시점
 int fpTargetBox = 4;              // 1인칭 시점 대상 상자 인덱스 (0~4, 기본 5번 -> index 4)
 
@@ -25,20 +25,26 @@ int fpTargetBox = 4;              // 1인칭 시점 대상 상자 인덱스 (0~4
 bool isMoving = true;             // b: 벨트 이동 토글
 float beltOffset = 0.0f;          // 벨트 줄무늬 이동 오프셋
 float boxPositions[5] = { 0.0f, 2.5f, 5.0f, 7.5f, 10.0f }; // 상자 5개의 레일 상의 거리 위치
-bool isLoadedOnTruck[5] = { false, false, false, false, false }; // 상자의 트럭 적재 여부
 
-// --- 트럭 상태 변수 (실습 24) ---
-glm::vec3 truckPos = glm::vec3(6.5f, 0.0f, 2.5f); // 트럭 초기 위치
+// --- 상자 적재 애니메이션 변수 ---
+bool isLoadedOnTruck[5] = { false, false, false, false, false };      // 적재 완료 여부
+bool isLoadingAnimation[5] = { false, false, false, false, false };   // 적재 애니메이션 진행 중 여부
+float loadProgress[5] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };             // 애니메이션 진행률 (0.0 ~ 1.0)
+glm::vec3 loadStartPos[5];                                            // 이동 시작 위치
+glm::vec3 loadTargetPos[5];                                           // 이동 목표 위치 (트럭 짐칸)
+
+// --- 트럭 상태 변수 ---
+glm::vec3 truckPos = glm::vec3(-4.0f, 0.0f, 2.5f); // 트럭 초기 위치
 float truckSpeed = 3.0f;
-int truckDirection = 1;                            // 1: +Z 방향, -1: -Z 방향, 0: 정지
+int truckDirection = 1;                            // 1: +Z 방향, -1: -Z 방향
 bool isTruckMoving = false;                        // G/g: 트럭 이동 토글
 
 // 벨트 구간 및 부드러운 코너 궤적 설정
-const float SEG1_LEN = 6.0f;                            // Z축 직진 구간 길이
-const float CORNER_RADIUS = 0.5f;                        // 코너 원호 반지름
-const float CORNER_LEN = 3.14159265f * CORNER_RADIUS / 2.0f; // 90도 원호 호 길이 (~0.785f)
-const float SEG2_LEN = 6.0f;                            // X축 직진 구간 길이
-const float TOTAL_LEN = SEG1_LEN + CORNER_LEN + SEG2_LEN; // 전체 트랙 길이
+const float SEG1_LEN = 6.0f;
+const float CORNER_RADIUS = 0.5f;
+const float CORNER_LEN = 3.14159265f * CORNER_RADIUS / 2.0f;
+const float SEG2_LEN = 6.0f;
+const float TOTAL_LEN = SEG1_LEN + CORNER_LEN + SEG2_LEN;
 
 const float CORNER_CENTER_X = 0.5f;
 const float CORNER_CENTER_Z = 0.5f;
@@ -61,7 +67,7 @@ float cubeVertices[] = {
     -0.5f, -0.5f, -0.5f, -0.5f,  0.5f, -0.5f,  0.5f,  0.5f, -0.5f,
      0.5f,  0.5f, -0.5f,  0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f,
     // Top
-    -0.5f,  0.5f, -0.5f, -0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  0.5f,
+     0.5f,  0.5f, -0.5f, -0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  0.5f,
      0.5f,  0.5f,  0.5f,  0.5f,  0.5f, -0.5f, -0.5f,  0.5f, -0.5f,
     // Bottom
     -0.5f, -0.5f, -0.5f,  0.5f, -0.5f, -0.5f,  0.5f, -0.5f,  0.5f,
@@ -119,85 +125,6 @@ void InitBuffer() {
     glEnableVertexAttribArray(1);
 }
 
-void resetAll() {
-    isPerspective = true;
-    cameraAngleY = 45.0f;
-    cameraRadius = 15.0f;
-    isMoving = true;
-    beltOffset = 0.0f;
-
-    isFirstPerson = false;
-    fpTargetBox = 4; // 5번 상자
-
-    truckPos = glm::vec3(6.5f, 0.0f, 2.5f);
-    truckDirection = 1;
-    isTruckMoving = false;
-
-    for (int i = 0; i < 5; ++i) {
-        boxPositions[i] = i * 2.5f;
-        isLoadedOnTruck[i] = false;
-    }
-}
-
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (action != GLFW_PRESS && action != GLFW_REPEAT) return;
-
-    switch (key) {
-    case GLFW_KEY_Q:
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-        break;
-    case GLFW_KEY_B:
-        isMoving = !isMoving;
-        break;
-    case GLFW_KEY_P:
-        isPerspective = !isPerspective;
-        break;
-    case GLFW_KEY_R:
-        resetAll();
-        break;
-
-        // --- 실습 24 추가 키 조작 ---
-    case GLFW_KEY_V: // 1인칭 / 3인칭 시점 전환
-        isFirstPerson = !isFirstPerson;
-        break;
-    case GLFW_KEY_N: // N (Shift 여부에 따른 처리)
-        if (mods & GLFW_MOD_SHIFT) { // Shift + n -> N (이전 상자 시점)
-            fpTargetBox = (fpTargetBox - 1 + 5) % 5;
-        }
-        else { // n (다음 상자 시점)
-            fpTargetBox = (fpTargetBox + 1) % 5;
-        }
-        break;
-    case GLFW_KEY_G: // 트럭 출발 / 정지
-        if (!isTruckMoving) {
-            isTruckMoving = true;
-        }
-        else {
-            isTruckMoving = false;
-        }
-        break;
-
-        // 상자 트럭 적재 키 (1~5)
-    case GLFW_KEY_1: isLoadedOnTruck[0] = true; break;
-    case GLFW_KEY_2: isLoadedOnTruck[1] = true; break;
-    case GLFW_KEY_3: isLoadedOnTruck[2] = true; break;
-    case GLFW_KEY_4: isLoadedOnTruck[3] = true; break;
-    case GLFW_KEY_5: isLoadedOnTruck[4] = true; break;
-
-        // 카메라 원근 및 회전
-    case GLFW_KEY_EQUAL:
-        cameraRadius -= 0.5f;
-        if (cameraRadius < 3.0f) cameraRadius = 3.0f;
-        break;
-    case GLFW_KEY_MINUS:
-        cameraRadius += 0.5f;
-        if (cameraRadius > 30.0f) cameraRadius = 30.0f;
-        break;
-    case GLFW_KEY_LEFT:  cameraAngleY -= 3.0f; break;
-    case GLFW_KEY_RIGHT: cameraAngleY += 3.0f; break;
-    }
-}
-
 glm::mat4 getTrackTransform(float dist, float heightOffset, glm::vec3* outForward = nullptr) {
     glm::mat4 model = glm::mat4(1.0f);
     glm::vec3 forward(0.0f);
@@ -229,15 +156,101 @@ glm::mat4 getTrackTransform(float dist, float heightOffset, glm::vec3* outForwar
     return model;
 }
 
+void resetAll() {
+    isPerspective = true;
+    cameraAngleY = 45.0f;
+    cameraRadius = 15.0f;
+    isMoving = true;
+    beltOffset = 0.0f;
+
+    isFirstPerson = false;
+    fpTargetBox = 4;
+
+    truckPos = glm::vec3(-4.0f, 0.0f, 2.5f);
+    truckDirection = 1;
+    isTruckMoving = false;
+
+    for (int i = 0; i < 5; ++i) {
+        boxPositions[i] = i * 2.5f;
+        isLoadedOnTruck[i] = false;
+        isLoadingAnimation[i] = false;
+        loadProgress[i] = 0.0f;
+    }
+}
+
+// 상자를 트럭으로 이동시키는 애니메이션 시작 함수
+void startLoadAnimation(int boxIdx) {
+    if (isLoadedOnTruck[boxIdx] || isLoadingAnimation[boxIdx]) return;
+
+    // 1. 현재 상자의 실제 벨트 위 위치 계산 (시작점)
+    glm::mat4 curMat = getTrackTransform(boxPositions[boxIdx], 0.95f);
+    loadStartPos[boxIdx] = glm::vec3(curMat[3]);
+
+    // 2. 이미 적재된 상자 개수를 고려하여 트럭 짐칸의 적재 위치 계산 (목표점)
+    int loadedCount = 0;
+    for (int i = 0; i < 5; ++i) {
+        if (isLoadedOnTruck[i] || isLoadingAnimation[i]) loadedCount++;
+    }
+    float zOffset = -1.4f + (loadedCount % 3) * 0.9f;
+    float yOffset = 1.1f + (loadedCount / 3) * 0.7f;
+    loadTargetPos[boxIdx] = truckPos + glm::vec3(0.0f, yOffset, zOffset);
+
+    // 3. 애니메이션 상태 시작
+    isLoadingAnimation[boxIdx] = true;
+    loadProgress[boxIdx] = 0.0f;
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (action != GLFW_PRESS && action != GLFW_REPEAT) return;
+
+    switch (key) {
+    case GLFW_KEY_Q: glfwSetWindowShouldClose(window, GLFW_TRUE); break;
+    case GLFW_KEY_B: isMoving = !isMoving; break;
+    case GLFW_KEY_P: isPerspective = !isPerspective; break;
+    case GLFW_KEY_R: resetAll(); break;
+
+    case GLFW_KEY_V: isFirstPerson = !isFirstPerson; break;
+    case GLFW_KEY_N:
+        if (mods & GLFW_MOD_SHIFT) {
+            fpTargetBox = (fpTargetBox - 1 + 5) % 5;
+        }
+        else {
+            fpTargetBox = (fpTargetBox + 1) % 5;
+        }
+        break;
+    case GLFW_KEY_G:
+        isTruckMoving = !isTruckMoving;
+        break;
+
+        // 1~5 키 입력 시 부드러운 적재 애니메이션 시작
+    case GLFW_KEY_1: startLoadAnimation(0); break;
+    case GLFW_KEY_2: startLoadAnimation(1); break;
+    case GLFW_KEY_3: startLoadAnimation(2); break;
+    case GLFW_KEY_4: startLoadAnimation(3); break;
+    case GLFW_KEY_5: startLoadAnimation(4); break;
+
+    case GLFW_KEY_EQUAL:
+        cameraRadius -= 0.5f;
+        if (cameraRadius < 3.0f) cameraRadius = 3.0f;
+        break;
+    case GLFW_KEY_MINUS:
+        cameraRadius += 0.5f;
+        if (cameraRadius > 30.0f) cameraRadius = 30.0f;
+        break;
+    case GLFW_KEY_LEFT:  cameraAngleY -= 3.0f; break;
+    case GLFW_KEY_RIGHT: cameraAngleY += 3.0f; break;
+    }
+}
+
 void update(float deltaTime) {
-    // 1. 벨트 및 레일 위 상자 이동
+    // 1. 컨베이어 벨트 및 레일 상자 이동
     if (isMoving) {
         float speed = 2.0f * deltaTime;
         beltOffset += speed;
         if (beltOffset >= 0.4f) beltOffset -= 0.4f;
 
         for (int i = 0; i < 5; ++i) {
-            if (!isLoadedOnTruck[i]) {
+            if (!isLoadedOnTruck[i] && !isLoadingAnimation[i]) {
                 boxPositions[i] += speed;
                 if (boxPositions[i] >= TOTAL_LEN) {
                     boxPositions[i] -= TOTAL_LEN;
@@ -246,11 +259,30 @@ void update(float deltaTime) {
         }
     }
 
-    // 2. 트럭 이동 처리
-    if (isTruckMoving) {
-        truckPos.z += truckDirection * truckSpeed * deltaTime;
+    // 2. 적재 애니메이션 진행 업데이트
+    for (int i = 0; i < 5; ++i) {
+        if (isLoadingAnimation[i]) {
+            loadProgress[i] += 1.5f * deltaTime; // 이동 속도 제어 (약 0.67초 동안 이동)
+            if (loadProgress[i] >= 1.0f) {
+                loadProgress[i] = 1.0f;
+                isLoadingAnimation[i] = false;
+                isLoadedOnTruck[i] = true; // 완료 후 완전 적재로 전환
+            }
+        }
+    }
 
-        // 바닥 끝에 도달하면 정지하고 반대 방향으로 설정
+    // 3. 트럭 이동 처리
+    if (isTruckMoving) {
+        float truckMoveZ = truckDirection * truckSpeed * deltaTime;
+        truckPos.z += truckMoveZ;
+
+        // 적재 중이거나 적재가 완료된 상자들도 트럭 이동을 함께 따라감
+        for (int i = 0; i < 5; ++i) {
+            if (isLoadingAnimation[i]) {
+                loadTargetPos[i].z += truckMoveZ;
+            }
+        }
+
         if (truckPos.z > 15.0f) {
             truckPos.z = 15.0f;
             isTruckMoving = false;
@@ -309,11 +341,10 @@ void drawBoxDots(int numDots, const glm::mat4& boxModel, const glm::mat4& viewPr
     }
 }
 
-// 실습 24: 육면체 조합 트럭 렌더링 함수
 void drawTruck(const glm::mat4& viewProj, GLuint transformLoc) {
     glm::mat4 truckBase = glm::translate(glm::mat4(1.0f), truckPos);
 
-    // 1. 차체 프레임 (하부)
+    // 1. 차체 프레임
     glm::mat4 chassis = glm::translate(truckBase, glm::vec3(0.0f, 0.3f, 0.0f));
     chassis = glm::scale(chassis, glm::vec3(2.2f, 0.3f, 5.0f));
     drawCube(chassis, viewProj, glm::vec3(0.2f, 0.2f, 0.2f), transformLoc);
@@ -329,15 +360,42 @@ void drawTruck(const glm::mat4& viewProj, GLuint transformLoc) {
         }
     }
 
-    // 3. 운전석 (앞쪽)
+    // 3. 운전석
     glm::mat4 cabin = glm::translate(truckBase, glm::vec3(0.0f, 1.1f, 1.6f));
     cabin = glm::scale(cabin, glm::vec3(2.0f, 1.3f, 1.5f));
     drawCube(cabin, viewProj, glm::vec3(0.8f, 0.1f, 0.1f), transformLoc);
 
-    // 4. 짐칸 (뒤쪽)
+    // 4. 짐칸
     glm::mat4 bed = glm::translate(truckBase, glm::vec3(0.0f, 0.6f, -0.8f));
     bed = glm::scale(bed, glm::vec3(2.0f, 0.3f, 3.0f));
     drawCube(bed, viewProj, glm::vec3(0.5f, 0.5f, 0.5f), transformLoc);
+}
+
+// 상자의 현재 렌더링 위치(행렬)를 계산하는 보조 함수
+glm::mat4 getBoxCurrentMatrix(int i) {
+    if (isLoadingAnimation[i]) {
+        // 애니메이션 중: 시작점 -> 끝점으로 곡선(포물선) 이동
+        float t = loadProgress[i];
+        glm::vec3 currPos = glm::mix(loadStartPos[i], loadTargetPos[i], t);
+        // 이동 중 살짝 공중으로 들려 올려지는 연출 (포물선 Y축 추가)
+        currPos.y += sin(t * 3.14159265f) * 1.5f;
+
+        return glm::translate(glm::mat4(1.0f), currPos);
+    }
+    else if (isLoadedOnTruck[i]) {
+        // 완전 적재 상태: 트럭 짐칸 위치에 고정
+        int loadedIndex = 0;
+        for (int k = 0; k < i; ++k) {
+            if (isLoadedOnTruck[k]) loadedIndex++;
+        }
+        float zOffset = -1.4f + (loadedIndex % 3) * 0.9f;
+        float yOffset = 1.1f + (loadedIndex / 3) * 0.7f;
+        return glm::translate(glm::mat4(1.0f), truckPos + glm::vec3(0.0f, yOffset, zOffset));
+    }
+    else {
+        // 벨트 위 이동 상태
+        return getTrackTransform(boxPositions[i], 0.95f);
+    }
 }
 
 void drawScene(GLFWwindow* window, float deltaTime) {
@@ -354,27 +412,22 @@ void drawScene(GLFWwindow* window, float deltaTime) {
 
     // --- 카메라 뷰 행렬 계산 ---
     if (isFirstPerson) {
-        // 1인칭 시점: 대상 상자 위치에서 상자가 바라보는 방향 주시
-        glm::vec3 boxPos;
-        glm::vec3 boxForward;
+        glm::mat4 targetBoxMat = getBoxCurrentMatrix(fpTargetBox);
+        glm::vec3 boxPos = glm::vec3(targetBoxMat[3]);
+        glm::vec3 boxForward(0.0f, 0.0f, 1.0f);
 
-        if (isLoadedOnTruck[fpTargetBox]) {
-            // 트럭 위에 적재된 상태
-            boxPos = truckPos + glm::vec3(0.0f, 1.1f, -0.8f);
+        if (!isLoadedOnTruck[fpTargetBox] && !isLoadingAnimation[fpTargetBox]) {
+            getTrackTransform(boxPositions[fpTargetBox], 0.95f, &boxForward);
+        }
+        else if (isLoadedOnTruck[fpTargetBox]) {
             boxForward = glm::vec3(0.0f, 0.0f, (float)truckDirection);
         }
-        else {
-            // 벨트 위에 있는 상태
-            glm::mat4 trackMat = getTrackTransform(boxPositions[fpTargetBox], 0.95f, &boxForward);
-            boxPos = glm::vec3(trackMat[3]);
-        }
 
-        glm::vec3 eyePos = boxPos + glm::vec3(0.0f, 0.4f, 0.0f); // 상자 약간 위 시점
+        glm::vec3 eyePos = boxPos + glm::vec3(0.0f, 0.4f, 0.0f);
         glm::vec3 targetPos = eyePos + boxForward * 3.0f;
         view = glm::lookAt(eyePos, targetPos, glm::vec3(0.0f, 1.0f, 0.0f));
     }
     else {
-        // 3인칭 궤도 시점
         float radY = glm::radians(cameraAngleY);
         float camX = cameraRadius * sin(radY) * cos(glm::radians(30.0f));
         float camY = cameraRadius * sin(glm::radians(30.0f));
@@ -403,13 +456,13 @@ void drawScene(GLFWwindow* window, float deltaTime) {
     glm::vec3 cStripe = glm::vec3(0.4f, 0.4f, 0.4f);
     glm::vec3 cLeg = glm::vec3(0.15f, 0.15f, 0.15f);
 
-    // 1. 바닥 (트럭 이동 범위를 고려하여 확장)
+    // 1. 바닥
     glm::mat4 groundModel = glm::mat4(1.0f);
     groundModel = glm::translate(groundModel, glm::vec3(2.5f, -0.5f, 2.5f));
     groundModel = glm::scale(groundModel, glm::vec3(30.0f, 0.1f, 40.0f));
     drawCube(groundModel, viewProj, cGround, transformLoc);
 
-    // 2. 벨트 프레임 및 바닥 판
+    // 2. 벨트 및 받침 다리
     glm::mat4 seg1Frame = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.4f, 3.25f));
     seg1Frame = glm::scale(seg1Frame, glm::vec3(1.4f, 0.2f, 6.5f));
     drawCube(seg1Frame, viewProj, cBeltFrame, transformLoc);
@@ -434,7 +487,6 @@ void drawScene(GLFWwindow* window, float deltaTime) {
     cornerSurf = glm::scale(cornerSurf, glm::vec3(1.0f, 0.05f, 1.0f));
     drawCube(cornerSurf, viewProj, cBeltSurface, transformLoc);
 
-    // 받침 다리
     float legPositions[4] = { 1.5f, 5.5f, 1.5f, 5.5f };
     for (int i = 0; i < 2; ++i) {
         glm::mat4 leg = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, legPositions[i]));
@@ -447,13 +499,12 @@ void drawScene(GLFWwindow* window, float deltaTime) {
         drawCube(leg, viewProj, cLeg, transformLoc);
     }
 
-    // 3. 줄무늬
+    // 3. 벨트 줄무늬
     for (float d = 0.0f; d <= TOTAL_LEN; d += 0.4f) {
         float currentDist = d + beltOffset;
         if (currentDist > TOTAL_LEN) currentDist -= TOTAL_LEN;
 
         glm::mat4 stripeModel = getTrackTransform(currentDist, 0.54f);
-
         if (currentDist > SEG1_LEN - 0.2f && currentDist < SEG1_LEN + CORNER_LEN + 0.2f) {
             stripeModel = glm::scale(stripeModel, glm::vec3(0.95f, 0.02f, 0.12f));
         }
@@ -466,24 +517,11 @@ void drawScene(GLFWwindow* window, float deltaTime) {
     // 4. 트럭 그리기
     drawTruck(viewProj, transformLoc);
 
-    // 5. 상자 5개 렌더링
-    int loadedCount = 0;
+    // 5. 상자 5개 렌더링 (애니메이션 적용 위치)
     for (int i = 0; i < 5; ++i) {
-        glm::mat4 boxModel;
-        if (isLoadedOnTruck[i]) {
-            // 트럭 짐칸 위 적재 위치 계산 (쌓거나 나열)
-            float zOffset = -1.4f + (loadedCount % 3) * 0.9f;
-            float yOffset = 1.1f + (loadedCount / 3) * 0.7f;
-            loadedCount++;
-
-            boxModel = glm::translate(glm::mat4(1.0f), truckPos + glm::vec3(0.0f, yOffset, zOffset));
-        }
-        else {
-            // 벨트 위 위치 계산
-            boxModel = getTrackTransform(boxPositions[i], 0.95f);
-        }
-
+        glm::mat4 boxModel = getBoxCurrentMatrix(i);
         glm::mat4 drawBox = glm::scale(boxModel, glm::vec3(0.8f, 0.7f, 0.8f));
+
         drawCube(drawBox, viewProj, boxColors[i], transformLoc);
         drawBoxDots(i + 1, boxModel, viewProj, transformLoc);
     }
@@ -495,7 +533,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 800, "Practice 24 - Delivery Center Truck & Viewpoint", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(800, 800, "Practice 24 - Smooth Loading Animation", nullptr, nullptr);
     if (!window) { glfwTerminate(); return -1; }
 
     glfwMakeContextCurrent(window);
