@@ -10,15 +10,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-// ============================================================
-// 실습 29 - 눈 내리는 장면 (조명 2)
-//  s   : 눈 내리기 / 멈추기
-//  r   : 조명이 y축 기준 공전 / 멈춤
-//  n/f : 조명이 중앙으로 가까워지기 / 멀어지기
-//  +/- : 조명 세기 증가 / 감소
-//  q   : 종료
-// ============================================================
-
 GLuint shaderProgramID;
 GLint locModel, locView, locProj, locColor, locLightPos, locLightColor, locViewPos, locLightOn;
 
@@ -233,9 +224,6 @@ void InitBuffer() {
     circleMesh = createMesh(makeCircle(96), GL_LINE_LOOP);
 }
 
-// ============================================================
-// 입력 / 갱신
-// ============================================================
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (action != GLFW_PRESS && action != GLFW_REPEAT) return;
 
@@ -300,9 +288,6 @@ glm::vec3 getLightPos() {
     return glm::vec3(lightRadius * cos(rad), lightHeight, lightRadius * sin(rad));
 }
 
-// ============================================================
-// 그리기
-// ============================================================
 void drawMesh(const Mesh& m, const glm::mat4& model, glm::vec3 color, bool unlit = false) {
     glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
     // fragment26은 조명이 꺼지면 0.3 * objectColor만 출력하므로, 원하는 색이 그대로 나오게 0.3으로 나눠서 넘김
